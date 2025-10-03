@@ -1,0 +1,6 @@
+prog
+.exe
+.vscode
+build/
+comands.txt
+byte_code.txt
