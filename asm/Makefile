@@ -15,26 +15,22 @@ null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,
 
 CPPFLAGS += $(SANITIZER_FLAGS)
 
-CPPSRC := main.cpp canary.cpp check_errors.cpp hash.cpp stack.cpp string_functions.cpp asm.cpp calculate.cpp processor.cpp
+CPPSRC := main.cpp asm.cpp canary.cpp check_errors.cpp hash.cpp stack.cpp string_functions.cpp
 
-CPPOBJ := $(CPPSRC:%.cpp=build/%.o)
+CPPOBJ := $(CPPSRC:%.cpp=asm/build/%.o)
 
 HEADER_DEPENDS := $(CPPOBJ:%.o=%.d)
 
 .PHONY: all
 all: prog
 
-$(CPPOBJ): build/%.o: %.cpp Makefile
+$(CPPOBJ): asm/build/%.o: asm/%.cpp
 	@$(CXX) $(CPPFLAGS) -MP -MMD -c $< -o $@
 
 prog: $(CPPOBJ) 
 	@$(CXX) $^ -o $@ $(CPPFLAGS)
 
 -include $(HEADER_DEPENDS)
- 
-.PHONY: doxygen
-doxygen:
-	@doxygen docs/Doxyfile
 
 .PHONY: clean
 clean:

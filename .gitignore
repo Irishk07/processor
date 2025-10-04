@@ -2,5 +2,6 @@ prog
 .exe
 .vscode
 build/
-comands.txt
-byte_code.txt
+asm/comands.txt
+processor/byte_code.txt
+asm/commands_1.txt
