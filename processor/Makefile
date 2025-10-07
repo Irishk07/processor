@@ -22,12 +22,12 @@ CPPOBJ := $(CPPSRC:%.cpp=processor/build/%.o)
 HEADER_DEPENDS := $(CPPOBJ:%.o=%.d)
 
 .PHONY: all
-all: prog
+all: proc_prog
 
 $(CPPOBJ): processor/build/%.o: processor/%.cpp
 	@$(CXX) $(CPPFLAGS) -MP -MMD -c $< -o $@
 
-prog: $(CPPOBJ) 
+proc_prog: $(CPPOBJ) 
 	@$(CXX) $^ -o $@ $(CPPFLAGS)
 
 -include $(HEADER_DEPENDS)
