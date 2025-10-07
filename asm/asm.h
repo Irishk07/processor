@@ -17,22 +17,6 @@ const size_t SIZE_BYTE_CODE = 64;
 const int LEN_REGISTER  = 3;
 
 
-enum code_comand {
-    CMD_PUSH  = 1,
-    CMD_POP   = 2,
-    CMD_ADD   = 3,
-    CMD_SUB   = 4,
-    CMD_DIV   = 5,
-    CMD_MUL   = 6,
-    CMD_SQRT  = 7,
-    CMD_POW   = 8,
-    CMD_IN    = 9,
-    CMD_PUSHR = 10,
-    CMD_POPR  = 11,
-    CMD_OUT   = 12,
-    CMD_HLT   = 13
-};
-
 enum assembler_status {
     ASM_SUCCESS           = 0,
     ASM_EXPECTS_NUMBER    = 1 << 0,
@@ -80,9 +64,11 @@ assembler_status AsmReadFile(Assembler* assembler);
 
 assembler_status AsmFillPointersArray(Assembler* assembler, char** pointers_data);
 
-assembler_status DataReSize(Assembler* assembler, size_t new_capacity);
+status_cmp FillCommand(Assembler* assembler, const char* expecting_comand, char* comand, type_t code_expecting_comand);
 
-status_cmp SetCommand(Assembler* assembler, const char* expecting_comand, char* comand, type_t code_expecting_comand);
+assembler_status GetFillArgNum(Assembler* assembler, char* string);
+
+assembler_status GetFillArgReg(Assembler* assembler, char* string);
 
 assembler_status Assemblirovanie(Assembler* assembler);
 

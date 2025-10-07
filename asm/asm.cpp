@@ -6,6 +6,7 @@
 #include "asm.h"
 
 #include "canary.h"
+#include "../common.h"
 #include "stack.h"
 #include "string_functions.h"
 #include <sys/stat.h>
@@ -122,25 +123,7 @@ assembler_status AsmFillPointersArray(Assembler* assembler, char** pointers_data
     return ASM_SUCCESS;
 }
 
-assembler_status DataReSize(Assembler* assembler, size_t new_capacity) {
-    assert(assembler);
-    assert(assembler->byte_code_data.data);
-    assert(assembler->byte_code_file);
-    assert(assembler->comands_file);  
-
-    type_t* temp_data = (type_t*)my_recalloc(assembler->byte_code_data.data, new_capacity * sizeof(type_t), 
-                                                                             assembler->byte_code_data.capacity * sizeof(type_t));
-
-    if (temp_data == NULL) {
-        CHECK_ERRORS_ASM(ASM_NOT_ENOUGH_MEMORY,     free(temp_data));
-    }
-
-    assembler->byte_code_data.data = temp_data;
-
-    return ASM_SUCCESS;
-}
-
-status_cmp SetCommand(Assembler* assembler, const char* expecting_comand, char* comand, type_t code_expecting_comand) {
+status_cmp FillCommand(Assembler* assembler, const char* expecting_comand, char* comand, type_t code_expecting_comand) {
     assert(assembler);
     assert(assembler->byte_code_data.data);
     assert(assembler->byte_code_file);
@@ -156,6 +139,35 @@ status_cmp SetCommand(Assembler* assembler, const char* expecting_comand, char* 
     return DIFFERENT;
 }
 
+assembler_status GetFillArgNum(Assembler* assembler, char* string) {
+    type_t number = 0;
+
+    if (sscanf(string, TYPE_T_PRINTF_SPECIFIER, &number) == 1) {
+        assembler->byte_code_data.data[assembler->byte_code_data.size] = number;
+        assembler->byte_code_data.size++;
+    }
+    else {
+        return ASM_EXPECTS_NUMBER;
+    }
+
+    return ASM_SUCCESS;
+}
+
+assembler_status GetFillArgReg(Assembler* assembler, char* string) {
+    char reg[LEN_REGISTER + 1] = {};
+
+    if (sscanf(string, "%s", reg) == 1) {
+        type_t code_reg = reg[1] - 'A' + 1;
+        assembler->byte_code_data.data[assembler->byte_code_data.size] = code_reg;
+        assembler->byte_code_data.size++;
+    }
+    else {
+        return ASM_EXPECTS_REGISTER;
+    }
+
+    return ASM_SUCCESS;
+}
+
 assembler_status Assemblirovanie(Assembler* assembler) {
     assert(assembler);
     assert(assembler->byte_code_data.data);
@@ -168,64 +180,37 @@ assembler_status Assemblirovanie(Assembler* assembler) {
     for (int i = 0; i < assembler->about_text.cnt_strok; ++i) {
         size_t old_size = assembler->byte_code_data.size;
         
-        if (SetCommand(assembler, "PUSH", pointers_data[i], CMD_PUSH)) {
-            type_t number = 0;
-            i++;
-
-            if (sscanf(pointers_data[i], TYPE_T_PRINTF_SPECIFIER, &number) == 1) {
-                assembler->byte_code_data.data[assembler->byte_code_data.size] = number;
-                assembler->byte_code_data.size++;
-            }
-            else {
-                CHECK_ERRORS_ASM(ASM_EXPECTS_NUMBER,       AsmDtor(assembler));
-            }
-
+        if (FillCommand(assembler, "PUSH", pointers_data[i], CMD_PUSH)) {
+            CHECK_ERRORS_ASM(GetFillArgNum(assembler, pointers_data[++i]));
             continue;
         }
 
-        if (SetCommand(assembler, "POP",   pointers_data[i], CMD_POP))  continue;
-        if (SetCommand(assembler, "ADD",   pointers_data[i], CMD_ADD))  continue;
-        if (SetCommand(assembler, "SUB",   pointers_data[i], CMD_SUB))  continue;
-        if (SetCommand(assembler, "DIV",   pointers_data[i], CMD_DIV))  continue;
-        if (SetCommand(assembler, "MUL",   pointers_data[i], CMD_MUL))  continue;
-        if (SetCommand(assembler, "SQRT",  pointers_data[i], CMD_SQRT)) continue;
-        if (SetCommand(assembler, "POW",   pointers_data[i], CMD_POW))  continue;
-        if (SetCommand(assembler, "IN",    pointers_data[i], CMD_IN))   continue;
-        if (SetCommand(assembler, "OUT",   pointers_data[i], CMD_OUT))  continue;
+        if (FillCommand(assembler, "POP",   pointers_data[i], CMD_POP))  continue;
+        if (FillCommand(assembler, "ADD",   pointers_data[i], CMD_ADD))  continue;
+        if (FillCommand(assembler, "SUB",   pointers_data[i], CMD_SUB))  continue;
+        if (FillCommand(assembler, "DIV",   pointers_data[i], CMD_DIV))  continue;
+        if (FillCommand(assembler, "MUL",   pointers_data[i], CMD_MUL))  continue;
+        if (FillCommand(assembler, "SQRT",  pointers_data[i], CMD_SQRT)) continue;
+        if (FillCommand(assembler, "POW",   pointers_data[i], CMD_POW))  continue;
+        if (FillCommand(assembler, "IN",    pointers_data[i], CMD_IN))   continue;
+        if (FillCommand(assembler, "OUT",   pointers_data[i], CMD_OUT))  continue;
 
-        if (SetCommand(assembler, "PUSHR", pointers_data[i], CMD_PUSHR)) {
-            char reg[LEN_REGISTER + 1] = {}; 
-            i++;
-
-            if (sscanf(pointers_data[i], "%s", reg) == 1) {
-                type_t code_reg = reg[1] - 'A' + 1;
-                assembler->byte_code_data.data[assembler->byte_code_data.size] = code_reg;
-                assembler->byte_code_data.size++;
-            }
-            else {
-                CHECK_ERRORS_ASM(ASM_EXPECTS_REGISTER,       AsmDtor(assembler); free(pointers_data));
-            }
-
+        if (FillCommand(assembler, "PUSHR", pointers_data[i], CMD_PUSHR)) {
+            CHECK_ERRORS_ASM(GetFillArgReg(assembler, pointers_data[++i]));
             continue;
         }
 
-        if (SetCommand(assembler, "POPR",  pointers_data[i], CMD_POPR)) {
-            char reg[LEN_REGISTER + 1] = {}; 
-            i++;
-
-            if (sscanf(pointers_data[i], "%s", reg) == 1) {
-                type_t code_reg = reg[1] - 'A' + 1;
-                assembler->byte_code_data.data[assembler->byte_code_data.size] = code_reg;
-                assembler->byte_code_data.size++;
-            }
-            else {
-                CHECK_ERRORS_ASM(ASM_EXPECTS_REGISTER,       AsmDtor(assembler); free(pointers_data));
-            }
-
+        if (FillCommand(assembler, "POPR",  pointers_data[i], CMD_POPR)) {
+            CHECK_ERRORS_ASM(GetFillArgReg(assembler, pointers_data[++i]));
             continue;
         }
 
-        if (SetCommand(assembler, "HLT", pointers_data[i], CMD_HLT)) {
+        if (FillCommand(assembler, "JMP", pointers_data[i], CMD_JMP)) {
+            CHECK_ERRORS_ASM(GetFillArgNum(assembler, pointers_data[++i]));
+            continue;
+        }
+
+        if (FillCommand(assembler, "HLT", pointers_data[i], CMD_HLT)) {
             break;
         }
 
@@ -240,6 +225,14 @@ assembler_status Assemblirovanie(Assembler* assembler) {
     }
     
     free(pointers_data);
+
+    // check Byte code
+    fprintf(stderr, "Byte code:\n");
+    for (size_t i = 0; i < assembler->byte_code_data.size; ++i) {
+        fprintf(stderr, TYPE_T_PRINTF_SPECIFIER " ", assembler->byte_code_data.data[i]);
+    }
+    fprintf(stderr, "\n");
+    getchar();
 
     return ASM_SUCCESS;
 }

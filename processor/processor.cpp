@@ -6,6 +6,7 @@
 #include "processor.h"
 
 #include "check_errors.h"
+#include "../common.h"
 #include "stack.h"
 #include "variable_information.h"
 
@@ -134,6 +135,8 @@ processor_status SPU(Processor* processor) {
                 DO_CASE(DO_POPR(processor, pointers_data));
             case CMD_PUSHR:
                 DO_CASE(DO_PUSHR(processor, pointers_data));
+            case CMD_JMP:
+                DO_CASE(DO_JMP(processor, pointers_data));
             case CMD_OUT:
                 DO_CASE(DO_OUT(processor));
             case CMD_HLT:
@@ -171,11 +174,11 @@ type_error_t ProcVerify(Processor* processor) {
 void ProcDump(Processor* processor, type_error_t code_error, int line, const char* function_name, const char* file_name) {
     fprintf(stderr, "Called at %s() %s:%d:\n", function_name, file_name, line);
 
-    fprintf(stderr, "registers[%d]:\n", CNT_REGISTERS);
+    fprintf(stderr, "    registers[%d]:\n", CNT_REGISTERS);
 
-    fprintf(stderr, "    [%d] = SERVICE\n", 0);
+    fprintf(stderr, "      [%d] = SERVICE\n", 0);
     for (int i = 1; i < CNT_REGISTERS; ++i) {
-        fprintf(stderr, "    [%d] = " TYPE_T_PRINTF_SPECIFIER " (R%cX)\n", i, processor->registers[i], i + 'A' - 1);
+        fprintf(stderr, "      [%d] = " TYPE_T_PRINTF_SPECIFIER " (R%cX)\n", i, processor->registers[i], i + 'A' - 1);
     }
 
     fprintf(stderr, "\n");
@@ -197,11 +200,11 @@ processor_status ProcDtor(Processor* processor) {
 
 
 processor_status DO_PUSH(Processor* processor, char** pointers_data) {
-    type_t first_num = 0;
+    type_t num = 0;
     processor->programm_cnt++;
 
-    sscanf(pointers_data[processor->programm_cnt], TYPE_T_PRINTF_SPECIFIER, &first_num);
-    CHECK_ERRORS_STACK(StackPush(&processor->stack, first_num));
+    sscanf(pointers_data[processor->programm_cnt], TYPE_T_PRINTF_SPECIFIER, &num);
+    CHECK_ERRORS_STACK(StackPush(&processor->stack, num));
 
     return PROC_SUCCESS;
 }
@@ -265,12 +268,12 @@ processor_status DO_MUL(Processor* processor) {
 }
 
 processor_status DO_SQRT(Processor* processor) {
-    type_t first_num  = 0;
+    type_t num = 0;
 
-    CHECK_ERRORS_STACK(StackPop(&processor->stack, &first_num));
+    CHECK_ERRORS_STACK(StackPop(&processor->stack, &num));
 
-    if (first_num >= 0) {
-        CHECK_ERRORS_STACK(StackPush(&processor->stack, (type_t)sqrt(first_num)));
+    if (num >= 0) {
+        CHECK_ERRORS_STACK(StackPush(&processor->stack, (type_t)sqrt(num)));
     }
     else {
         return PROC_SQRT_NEGATIVE_NUM;
@@ -291,22 +294,22 @@ processor_status DO_POW(Processor* processor) {
 }
 
 processor_status DO_IN(Processor* processor) {
-    type_t first_num  = 0;
+    type_t num  = 0;
 
-    scanf(TYPE_T_PRINTF_SPECIFIER, &first_num);
-    CHECK_ERRORS_STACK(StackPush(&processor->stack, first_num));
+    scanf(TYPE_T_PRINTF_SPECIFIER, &num);
+    CHECK_ERRORS_STACK(StackPush(&processor->stack, num));
 
     return PROC_SUCCESS;
 }
 
 processor_status DO_POPR(Processor* processor, char** pointers_data) {
-    type_t first_num = 0;
+    type_t num = 0;
     type_t code_reg  = 0;
 
-    CHECK_ERRORS_STACK(StackPop(&processor->stack, &first_num));
+    CHECK_ERRORS_STACK(StackPop(&processor->stack, &num));
     processor->programm_cnt++;
     sscanf(pointers_data[processor->programm_cnt], TYPE_T_PRINTF_SPECIFIER, &code_reg);
-    processor->registers[code_reg] = first_num;
+    processor->registers[code_reg] = num;
 
     return PROC_SUCCESS;
 }
@@ -322,10 +325,22 @@ processor_status DO_PUSHR(Processor* processor, char** pointers_data) {
 }
 
 processor_status DO_OUT(Processor* processor) {
-    type_t first_num = 0;
+    type_t num = 0;
 
-    CHECK_ERRORS_STACK(StackPop(&processor->stack, &first_num));
-    fprintf(stderr, "Answer " TYPE_T_PRINTF_SPECIFIER "\n", first_num);
+    CHECK_ERRORS_STACK(StackPop(&processor->stack, &num));
+    fprintf(stderr, "Answer " TYPE_T_PRINTF_SPECIFIER "\n", num);
+
+    return PROC_SUCCESS;
+}
+
+processor_status DO_JMP(Processor* processor, char** pointers_data) {
+    type_t num = 0;
+    processor->programm_cnt++;
+
+    sscanf(pointers_data[processor->programm_cnt], TYPE_T_PRINTF_SPECIFIER, &num);
+    processor->programm_cnt = (size_t)(num - 1);
+
+    getchar();
 
     return PROC_SUCCESS;
 }

@@ -25,22 +25,6 @@
 const int CNT_REGISTERS = 8 + 1; // +1 for service
 
 
-enum code_comand {
-    CMD_PUSH  = 1,
-    CMD_POP   = 2,
-    CMD_ADD   = 3,
-    CMD_SUB   = 4,
-    CMD_DIV   = 5,
-    CMD_MUL   = 6,
-    CMD_SQRT  = 7,
-    CMD_POW   = 8,
-    CMD_IN    = 9,
-    CMD_PUSHR = 10,
-    CMD_POPR  = 11,
-    CMD_OUT   = 12,
-    CMD_HLT   = 13
-};
-
 enum processor_status {
     PROC_SUCCESS                = 0,
     PROC_UNKNOWN_COMAND         = 1 << 0,
@@ -106,6 +90,8 @@ processor_status DO_POPR(Processor* processor, char** pointers_data);
 processor_status DO_PUSHR(Processor* processor, char** pointers_data);
 
 processor_status DO_OUT(Processor* processor);
+
+processor_status DO_JMP(Processor* processor, char** pointers_data);
 
 
 #endif //PROCESSOR_H_
