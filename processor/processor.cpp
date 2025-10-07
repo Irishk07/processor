@@ -107,42 +107,35 @@ processor_status SPU(Processor* processor) {
     char** pointers_data = (char**)calloc((size_t)(cnt_commands + 1), sizeof(char*));
     ProcFillPointersArray(processor, pointers_data, cnt_commands);
 
-    type_t command = 0;
+    type_t command    = 0;
+    type_t first_num  = 0;
+    type_t second_num = 0;
 
     while (true) {
         sscanf(pointers_data[processor->programm_cnt], TYPE_T_PRINTF_SPECIFIER, &command);
 
         switch (command) {
-            case CMD_PUSH:
-                DO_CASE(DO_PUSH(processor, pointers_data));
-            case CMD_POP:
-                DO_CASE(DO_POP(processor));
-            case CMD_ADD:
-                DO_CASE(DO_ADD(processor));
-            case CMD_SUB:       
-                DO_CASE(DO_SUB(processor));
-            case CMD_DIV:
-                DO_CASE(DO_DIV(processor));
-            case CMD_MUL:
-                DO_CASE(DO_MUL(processor));
-            case CMD_SQRT:
-                DO_CASE(DO_SQRT(processor));
-            case CMD_POW:
-                DO_CASE(DO_POW(processor));
-            case CMD_IN:
-                DO_CASE(DO_IN(processor));
-            case CMD_POPR:
-                DO_CASE(DO_POPR(processor, pointers_data));
-            case CMD_PUSHR:
-                DO_CASE(DO_PUSHR(processor, pointers_data));
-            case CMD_JMP:
-                DO_CASE(DO_JMP(processor, pointers_data));
-            case CMD_OUT:
-                DO_CASE(DO_OUT(processor));
-            case CMD_HLT:
-                break;
-            default:
-                return PROC_UNKNOWN_COMAND;
+            case CMD_PUSH:  DO_CASE(DO_PUSH(processor, pointers_data));
+            case CMD_POP:   DO_CASE(DO_POP(processor));
+            case CMD_ADD:   DO_CASE(DO_ADD(processor));
+            case CMD_SUB:   DO_CASE(DO_SUB(processor));
+            case CMD_DIV:   DO_CASE(DO_DIV(processor));
+            case CMD_MUL:   DO_CASE(DO_MUL(processor));
+            case CMD_SQRT:  DO_CASE(DO_SQRT(processor));
+            case CMD_POW:   DO_CASE(DO_POW(processor));
+            case CMD_IN:    DO_CASE(DO_IN(processor));
+            case CMD_POPR:  DO_CASE(DO_POPR(processor, pointers_data));
+            case CMD_PUSHR: DO_CASE(DO_PUSHR(processor, pointers_data));
+            case CMD_JMP:   DO_CASE(DO_JMP(processor, pointers_data));
+            case CMD_JB:    DO_JUMP_CONDITION(JB_SIGN,  first_num, second_num);
+            case CMD_JBE:   DO_JUMP_CONDITION(JBE_SIGN, first_num, second_num);
+            case CMD_JA:    DO_JUMP_CONDITION(JA_SIGN,  first_num, second_num);
+            case CMD_JAE:   DO_JUMP_CONDITION(JAE_SIGN, first_num, second_num);
+            case CMD_JE:    DO_JUMP_CONDITION(JE_SIGN,  first_num, second_num);
+            case CMD_JNE:   DO_JUMP_CONDITION(JNE_SIGN, first_num, second_num);
+            case CMD_OUT:   DO_CASE(DO_OUT(processor));
+            case CMD_HLT:   break;
+            default:        return PROC_UNKNOWN_COMAND;
         }
 
         if (command == CMD_HLT) {
@@ -340,10 +333,11 @@ processor_status DO_JMP(Processor* processor, char** pointers_data) {
     sscanf(pointers_data[processor->programm_cnt], TYPE_T_PRINTF_SPECIFIER, &num);
     processor->programm_cnt = (size_t)(num - 1);
 
-    getchar();
+    // getchar();
 
     return PROC_SUCCESS;
 }
+
 
 /*
 

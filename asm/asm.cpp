@@ -168,6 +168,17 @@ assembler_status GetFillArgReg(Assembler* assembler, char* string) {
     return ASM_SUCCESS;
 }
 
+void PrintfByteCode(Assembler* assembler) {
+    fprintf(stderr, "Byte code:\n");
+
+    for (size_t i = 0; i < assembler->byte_code_data.size; ++i) {
+        fprintf(stderr, TYPE_T_PRINTF_SPECIFIER " ", assembler->byte_code_data.data[i]);
+    }
+
+    fprintf(stderr, "\n");
+    getchar();
+}
+
 assembler_status Assemblirovanie(Assembler* assembler) {
     assert(assembler);
     assert(assembler->byte_code_data.data);
@@ -210,6 +221,11 @@ assembler_status Assemblirovanie(Assembler* assembler) {
             continue;
         }
 
+        if (FillCommand(assembler, "JB", pointers_data[i], CMD_JB)) {
+            CHECK_ERRORS_ASM(GetFillArgNum(assembler, pointers_data[++i]));
+            continue;
+        }
+
         if (FillCommand(assembler, "HLT", pointers_data[i], CMD_HLT)) {
             break;
         }
@@ -226,13 +242,7 @@ assembler_status Assemblirovanie(Assembler* assembler) {
     
     free(pointers_data);
 
-    // check Byte code
-    fprintf(stderr, "Byte code:\n");
-    for (size_t i = 0; i < assembler->byte_code_data.size; ++i) {
-        fprintf(stderr, TYPE_T_PRINTF_SPECIFIER " ", assembler->byte_code_data.data[i]);
-    }
-    fprintf(stderr, "\n");
-    getchar();
+    PrintfByteCode(assembler);
 
     return ASM_SUCCESS;
 }

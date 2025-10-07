@@ -13,14 +13,27 @@
 #define CHECK_ERRORS_PROC(error, ...)                  \
         if (error != PROC_SUCCESS) {                   \
             __VA_ARGS__;                               \
-            ProcDump(processor, error, DUMP_VAR_INFO); \
+            /* ProcDump(processor, error, DUMP_VAR_INFO); */ \
             return error;                              \
         }
 
 #define DO_CASE(function)            \
         CHECK_ERRORS_PROC(function); \
         break;
-        
+
+#define JB_SIGN <
+#define JBE_SIGN <=
+#define JA_SIGN >
+#define JAE_SIGN >=
+#define JE_SIGN ==
+#define JNE_SIGN !=
+
+#define DO_JUMP_CONDITION(sign, first_num, second_num) \
+    CHECK_ERRORS_STACK(StackPop(&processor->stack, &first_num));  \
+    CHECK_ERRORS_STACK(StackPop(&processor->stack, &second_num)); \
+    if (second_num sign first_num) {CHECK_ERRORS_PROC(DO_JMP(processor, pointers_data));} \
+    else {processor->programm_cnt++;} \
+    break;
 
 const int CNT_REGISTERS = 8 + 1; // +1 for service
 
@@ -92,6 +105,8 @@ processor_status DO_PUSHR(Processor* processor, char** pointers_data);
 processor_status DO_OUT(Processor* processor);
 
 processor_status DO_JMP(Processor* processor, char** pointers_data);
+
+processor_status DO_JB(Processor* processor, char** pointers_data);
 
 
 #endif //PROCESSOR_H_

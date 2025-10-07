@@ -70,6 +70,8 @@ assembler_status GetFillArgNum(Assembler* assembler, char* string);
 
 assembler_status GetFillArgReg(Assembler* assembler, char* string);
 
+void PrintfByteCode(Assembler* assembler);
+
 assembler_status Assemblirovanie(Assembler* assembler);
 
 assembler_status CreateExeFile(Assembler* assembler);
