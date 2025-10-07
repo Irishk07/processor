@@ -190,11 +190,8 @@ assembler_status Assemblirovanie(Assembler* assembler) {
 
     for (int i = 0; i < assembler->about_text.cnt_strok; ++i) {
         size_t old_size = assembler->byte_code_data.size;
-        
-        if (FillCommand(assembler, "PUSH", pointers_data[i], CMD_PUSH)) {
-            CHECK_ERRORS_ASM(GetFillArgNum(assembler, pointers_data[++i]));
-            continue;
-        }
+
+        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "PUSH", pointers_data[i], CMD_PUSH));
 
         if (FillCommand(assembler, "POP",   pointers_data[i], CMD_POP))  continue;
         if (FillCommand(assembler, "ADD",   pointers_data[i], CMD_ADD))  continue;
@@ -206,25 +203,16 @@ assembler_status Assemblirovanie(Assembler* assembler) {
         if (FillCommand(assembler, "IN",    pointers_data[i], CMD_IN))   continue;
         if (FillCommand(assembler, "OUT",   pointers_data[i], CMD_OUT))  continue;
 
-        if (FillCommand(assembler, "PUSHR", pointers_data[i], CMD_PUSHR)) {
-            CHECK_ERRORS_ASM(GetFillArgReg(assembler, pointers_data[++i]));
-            continue;
-        }
+        FILL_COMMAND_WITH_ARG_REG(FillCommand(assembler, "PUSHR", pointers_data[i], CMD_PUSHR));
+        FILL_COMMAND_WITH_ARG_REG(FillCommand(assembler, "POPR", pointers_data[i],  CMD_POPR));
 
-        if (FillCommand(assembler, "POPR",  pointers_data[i], CMD_POPR)) {
-            CHECK_ERRORS_ASM(GetFillArgReg(assembler, pointers_data[++i]));
-            continue;
-        }
-
-        if (FillCommand(assembler, "JMP", pointers_data[i], CMD_JMP)) {
-            CHECK_ERRORS_ASM(GetFillArgNum(assembler, pointers_data[++i]));
-            continue;
-        }
-
-        if (FillCommand(assembler, "JB", pointers_data[i], CMD_JB)) {
-            CHECK_ERRORS_ASM(GetFillArgNum(assembler, pointers_data[++i]));
-            continue;
-        }
+        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JMP", pointers_data[i], CMD_JMP));
+        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JB",  pointers_data[i], CMD_JB));
+        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JBE", pointers_data[i], CMD_JBE));
+        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JA",  pointers_data[i], CMD_JA));
+        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JAE", pointers_data[i], CMD_JAE));
+        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JE",  pointers_data[i], CMD_JE));
+        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JNE", pointers_data[i], CMD_JNE));
 
         if (FillCommand(assembler, "HLT", pointers_data[i], CMD_HLT)) {
             break;

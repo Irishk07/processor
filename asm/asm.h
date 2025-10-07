@@ -12,6 +12,17 @@
             return error;                         \
         }
 
+#define FILL_COMMAND_WITH_ARG_REG(function) \
+        if (function) {                  \
+            CHECK_ERRORS_ASM(GetFillArgReg(assembler, pointers_data[++i])); \
+            continue;                    \
+        }
+
+#define FILL_COMMAND_WITH_ARG_NUM(function) \
+        if (function) {                  \
+            CHECK_ERRORS_ASM(GetFillArgNum(assembler, pointers_data[++i])); \
+            continue;                    \
+        }
 
 const size_t SIZE_BYTE_CODE = 64;
 const int LEN_REGISTER  = 3;
