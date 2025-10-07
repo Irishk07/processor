@@ -5,40 +5,45 @@
 
 #include "stack.h"
 
-#define CHECK_ERRORS_ASM(error, ...)  \
-        if (error != ASM_SUCCESS) {  \
+#define CHECK_ERRORS_ASM(error, ...)              \
+        if (error != ASM_SUCCESS) {               \
             fprintf(stderr, "Err: %d\n", error);  \
-            __VA_ARGS__;              \
-            return error;             \
+            __VA_ARGS__;                          \
+            return error;                         \
         }
 
 
-const size_t SIZE_BYTE_CODE = 32;
+const size_t SIZE_BYTE_CODE = 64;
+const int LEN_REGISTER  = 3;
 
 
 enum code_comand {
-    PUSH = 1,
-    POP  = 2,
-    ADD  = 3,
-    SUB  = 4,
-    DIV  = 5,
-    MUL  = 6,
-    SQRT = 7,
-    POW  = 8,
-    OUT  = 9,
-    HLT  = 10
+    CMD_PUSH  = 1,
+    CMD_POP   = 2,
+    CMD_ADD   = 3,
+    CMD_SUB   = 4,
+    CMD_DIV   = 5,
+    CMD_MUL   = 6,
+    CMD_SQRT  = 7,
+    CMD_POW   = 8,
+    CMD_IN    = 9,
+    CMD_PUSHR = 10,
+    CMD_POPR  = 11,
+    CMD_OUT   = 12,
+    CMD_HLT   = 13
 };
 
 enum assembler_status {
-    ASM_SUCCESS             = 0,
-    ASM_EXPECTS_NUMBER      = 1 << 0,
-    ASM_EXPECTS_HLT         = 1 << 1,
-    ASM_NOT_ENOUGH_MEMORY   = 1 << 2,
-    ASM_UNKNOWN_COMAND      = 1 << 3,
-    ASM_READ_ERROR          = 1 << 4,
-    ASM_OPEN_ERROR          = 1 << 5,
-    ASM_CLOSE_ERROR         = 1 << 6,
-    ASM_STAT_ERROR          = 1 << 7
+    ASM_SUCCESS           = 0,
+    ASM_EXPECTS_NUMBER    = 1 << 0,
+    ASM_EXPECTS_HLT       = 1 << 1,
+    ASM_NOT_ENOUGH_MEMORY = 1 << 2,
+    ASM_UNKNOWN_COMAND    = 1 << 3,
+    ASM_READ_ERROR        = 1 << 4,
+    ASM_OPEN_ERROR        = 1 << 5,
+    ASM_CLOSE_ERROR       = 1 << 6,
+    ASM_STAT_ERROR        = 1 << 7,
+    ASM_EXPECTS_REGISTER  = 1 << 8
 };
 
 enum status_cmp {
@@ -73,7 +78,7 @@ int TextSize(const char *file_name);
 
 assembler_status AsmReadFile(Assembler* assembler);
 
-assembler_status FillPointersArray(Assembler* assembler, char** pointers_data);
+assembler_status AsmFillPointersArray(Assembler* assembler, char** pointers_data);
 
 assembler_status DataReSize(Assembler* assembler, size_t new_capacity);
 

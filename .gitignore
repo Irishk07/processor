@@ -1,7 +1,10 @@
-prog
+asm_prog
+proc_prog
 .exe
 .vscode
 build/
-asm/comands.txt
+asm/commands.txt
 processor/byte_code.txt
 asm/commands_1.txt
+asm/commands_2.txt
+asm/commands_reg.txt

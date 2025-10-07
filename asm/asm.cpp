@@ -11,46 +11,6 @@
 #include <sys/stat.h>
 
 
-assembler_status AsmCtor(Assembler* assembler, const char* name_comands_file, const char* name_byte_code_file) {
-    assert(assembler);
-    assert(name_byte_code_file);
-    assert(name_comands_file);
-
-    assembler->comands_file = name_comands_file;
-    assembler->byte_code_file = name_byte_code_file;
-
-    assembler->byte_code_data.capacity = SIZE_BYTE_CODE;
-    assembler->byte_code_data.size     = 0;
-
-    assembler->byte_code_data.data = (type_t*)calloc(assembler->byte_code_data.capacity, sizeof(type_t));
-
-    if (assembler->byte_code_data.data == NULL){
-        CHECK_ERRORS_ASM(ASM_NOT_ENOUGH_MEMORY);
-    }
-
-    CHECK_ERRORS_ASM(Assemblirovanie(assembler),        free(assembler->byte_code_data.data));
-
-    // fprintf(stderr, "%d", Assemblirovanie(assembler));
-
-    CHECK_ERRORS_ASM(CreateExeFile(assembler),      free(assembler->byte_code_data.data));
-
-    return ASM_SUCCESS;
-}
-
-int TextSize(const char *file_name) {
-    assert(file_name);
-
-    struct stat text_info = {};
-
-    if (stat(file_name, &text_info) == -1) {
-        perror("Error is");
-
-        return -1;
-    }
-
-    return (int)text_info.st_size;
-}
-
 assembler_status AsmReadFile(Assembler* assembler) {
     assert(assembler);
     assert(assembler->byte_code_data.data);
@@ -83,7 +43,7 @@ assembler_status AsmReadFile(Assembler* assembler) {
     for ( ; *temp_text != '\0'; ++temp_text) {
         if (*temp_text == '\n' || *temp_text == ' ') {
             assembler->about_text.cnt_strok++;
-            *temp_text == '\0';
+            // *temp_text == '\0';
         }
     }
 
@@ -96,7 +56,47 @@ assembler_status AsmReadFile(Assembler* assembler) {
     return ASM_SUCCESS;
 }
 
-assembler_status FillPointersArray(Assembler* assembler, char** pointers_data) {
+assembler_status AsmCtor(Assembler* assembler, const char* name_comands_file, const char* name_byte_code_file) {
+    assert(assembler);
+    assert(name_byte_code_file);
+    assert(name_comands_file);
+
+    assembler->comands_file = name_comands_file;
+    assembler->byte_code_file = name_byte_code_file;
+
+    assembler->byte_code_data.capacity = SIZE_BYTE_CODE;
+    assembler->byte_code_data.size     = 0;
+
+    assembler->byte_code_data.data = (type_t*)calloc(assembler->byte_code_data.capacity, sizeof(type_t));
+
+    if (assembler->byte_code_data.data == NULL){
+        CHECK_ERRORS_ASM(ASM_NOT_ENOUGH_MEMORY);
+    }
+
+    AsmReadFile(assembler);
+
+    CHECK_ERRORS_ASM(Assemblirovanie(assembler),        free(assembler->byte_code_data.data));
+
+    CHECK_ERRORS_ASM(CreateExeFile(assembler),      free(assembler->byte_code_data.data));
+
+    return ASM_SUCCESS;
+}
+
+int TextSize(const char *file_name) {
+    assert(file_name);
+
+    struct stat text_info = {};
+
+    if (stat(file_name, &text_info) == -1) {
+        perror("Error is");
+
+        return -1;
+    }
+
+    return (int)text_info.st_size;
+}
+
+assembler_status AsmFillPointersArray(Assembler* assembler, char** pointers_data) {
     assert(assembler);
     assert(assembler->byte_code_data.data);
     assert(assembler->byte_code_file);
@@ -146,8 +146,6 @@ status_cmp SetCommand(Assembler* assembler, const char* expecting_comand, char* 
     assert(assembler->byte_code_file);
     assert(assembler->comands_file); 
 
-    // fprintf(stderr, "%s\n", comand);
-
     if(!strcmp(expecting_comand, (const char*)comand)) {
         assembler->byte_code_data.data[assembler->byte_code_data.size] = code_expecting_comand;
         assembler->byte_code_data.size++;
@@ -164,23 +162,14 @@ assembler_status Assemblirovanie(Assembler* assembler) {
     assert(assembler->byte_code_file);
     assert(assembler->comands_file);
 
-    AsmReadFile(assembler);
-    // fprintf(stderr, "AsmReadFile %d\n", AsmReadFile(assembler));
-
     char** pointers_data = (char**)calloc((size_t)(assembler->about_text.cnt_strok + 1), sizeof(char*));
-    FillPointersArray(assembler, pointers_data);
-    //fprintf(stderr, "FillPoitersArray %d\n", FillPointersArray(assembler, pointers_data));
+    AsmFillPointersArray(assembler, pointers_data);
 
     for (int i = 0; i < assembler->about_text.cnt_strok; ++i) {
         size_t old_size = assembler->byte_code_data.size;
-
-        //fprintf(stderr, "%s\n", pointers_data[i]);
-
-        // fprintf(stderr, "%d\n", i);
         
-        if (SetCommand(assembler, "PUSH", pointers_data[i], PUSH)) {
+        if (SetCommand(assembler, "PUSH", pointers_data[i], CMD_PUSH)) {
             type_t number = 0;
-
             i++;
 
             if (sscanf(pointers_data[i], TYPE_T_PRINTF_SPECIFIER, &number) == 1) {
@@ -188,35 +177,66 @@ assembler_status Assemblirovanie(Assembler* assembler) {
                 assembler->byte_code_data.size++;
             }
             else {
-                CHECK_ERRORS_ASM(ASM_EXPECTS_NUMBER,       free(assembler));
+                CHECK_ERRORS_ASM(ASM_EXPECTS_NUMBER,       AsmDtor(assembler));
             }
 
             continue;
         }
-        // fprintf(stderr, "%d\n", i);
 
-        SetCommand(assembler, "POP",  pointers_data[i], POP);
-        SetCommand(assembler, "ADD",  pointers_data[i], ADD);
-        SetCommand(assembler, "SUB",  pointers_data[i], SUB);
-        SetCommand(assembler, "DIV",  pointers_data[i], DIV);
-        SetCommand(assembler, "MUL",  pointers_data[i], MUL);
-        SetCommand(assembler, "SQRT", pointers_data[i], SQRT);
-        SetCommand(assembler, "POW",  pointers_data[i], POW);
-        SetCommand(assembler, "OUT",  pointers_data[i], OUT);
+        if (SetCommand(assembler, "POP",   pointers_data[i], CMD_POP))  continue;
+        if (SetCommand(assembler, "ADD",   pointers_data[i], CMD_ADD))  continue;
+        if (SetCommand(assembler, "SUB",   pointers_data[i], CMD_SUB))  continue;
+        if (SetCommand(assembler, "DIV",   pointers_data[i], CMD_DIV))  continue;
+        if (SetCommand(assembler, "MUL",   pointers_data[i], CMD_MUL))  continue;
+        if (SetCommand(assembler, "SQRT",  pointers_data[i], CMD_SQRT)) continue;
+        if (SetCommand(assembler, "POW",   pointers_data[i], CMD_POW))  continue;
+        if (SetCommand(assembler, "IN",    pointers_data[i], CMD_IN))   continue;
+        if (SetCommand(assembler, "OUT",   pointers_data[i], CMD_OUT))  continue;
 
-        if (SetCommand(assembler, "HLT", pointers_data[i], HLT)) {
+        if (SetCommand(assembler, "PUSHR", pointers_data[i], CMD_PUSHR)) {
+            char reg[LEN_REGISTER + 1] = {}; 
+            i++;
+
+            if (sscanf(pointers_data[i], "%s", reg) == 1) {
+                type_t code_reg = reg[1] - 'A' + 1;
+                assembler->byte_code_data.data[assembler->byte_code_data.size] = code_reg;
+                assembler->byte_code_data.size++;
+            }
+            else {
+                CHECK_ERRORS_ASM(ASM_EXPECTS_REGISTER,       AsmDtor(assembler); free(pointers_data));
+            }
+
+            continue;
+        }
+
+        if (SetCommand(assembler, "POPR",  pointers_data[i], CMD_POPR)) {
+            char reg[LEN_REGISTER + 1] = {}; 
+            i++;
+
+            if (sscanf(pointers_data[i], "%s", reg) == 1) {
+                type_t code_reg = reg[1] - 'A' + 1;
+                assembler->byte_code_data.data[assembler->byte_code_data.size] = code_reg;
+                assembler->byte_code_data.size++;
+            }
+            else {
+                CHECK_ERRORS_ASM(ASM_EXPECTS_REGISTER,       AsmDtor(assembler); free(pointers_data));
+            }
+
+            continue;
+        }
+
+        if (SetCommand(assembler, "HLT", pointers_data[i], CMD_HLT)) {
             break;
         }
 
         if (assembler->byte_code_data.size == old_size) {
-            fprintf(stderr, "%s\n", pointers_data[i]);
-            CHECK_ERRORS_ASM(ASM_UNKNOWN_COMAND,        free(assembler->byte_code_data.data));
+            CHECK_ERRORS_ASM(ASM_UNKNOWN_COMAND,        AsmDtor(assembler); free(pointers_data));
         } 
     }
 
 
-    if (assembler->byte_code_data.data[assembler->byte_code_data.size - 1] != HLT) {
-        CHECK_ERRORS_ASM(ASM_EXPECTS_HLT,       free(assembler->byte_code_data.data));
+    if (assembler->byte_code_data.data[assembler->byte_code_data.size - 1] != CMD_HLT) {
+        CHECK_ERRORS_ASM(ASM_EXPECTS_HLT,       AsmDtor(assembler); free(pointers_data));
     }
     
     free(pointers_data);
@@ -235,8 +255,10 @@ assembler_status CreateExeFile(Assembler* assembler) {
         CHECK_ERRORS_ASM(ASM_OPEN_ERROR,       perror("Error is"));
     }
 
+    fprintf(text, "%zu\n", assembler->byte_code_data.size);
+
     for (size_t i = 0; i < assembler->byte_code_data.size; ++i) {
-        fprintf(text, TYPE_T_PRINTF_SPECIFIER "\n", assembler->byte_code_data.data[i]);
+        fprintf(text, TYPE_T_PRINTF_SPECIFIER " ", assembler->byte_code_data.data[i]);
     }
 
     if (fclose(text) == EOF) {
