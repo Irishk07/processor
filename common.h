@@ -1,6 +1,14 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#define TYPE_T_PRINTF_SPECIFIER "%ld"
+
+#include <stdint.h>
+
+typedef long type_t;
+
+typedef uint64_t type_error_t;
+
 
 enum code_comand {
     CMD_PUSH  = 1,
@@ -24,5 +32,15 @@ enum code_comand {
     CMD_POPR  = 42,
     CMD_PUSHR = 33
 };
+
+
+struct About_text {
+    char *text = NULL;
+    const char *text_name = NULL;
+    int cnt_strok = 0;
+    int text_size = 0;
+    char** pointer_on_text = NULL;
+};
+
 
 #endif // COMMON_H_
