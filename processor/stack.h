@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "../common.h"
 #include "debug.h"
 #include "hash.h"
 #include "variable_information.h"
@@ -22,13 +23,7 @@
         }
 
 
-typedef long type_t;
-
-#define TYPE_T_PRINTF_SPECIFIER "%ld"
-
 const char * const TYPE_NAME = "int";
-
-typedef uint64_t type_error_t;
 
 const size_t DEFAULT_START_CAPACITY = 32; // it must be > 0
 const size_t MAX_CAPACITY           = 1e9;

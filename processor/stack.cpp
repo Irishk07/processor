@@ -104,12 +104,12 @@ type_error_t StackReSize(stack_t* stack, size_t old_capacity) {
         
         init_with_poisons(stack->data + OffsetToLastElement(stack->size, CNT_CANARIES), stack->capacity - stack->size);
 
-        ON_DEBUG(fprintf(stderr, "MEOW I'm recalloc up, I do it %zu %zu\n", stack->size, stack->capacity));
+        // ON_DEBUG(fprintf(stderr, "MEOW I'm recalloc up, I do it %zu %zu\n", stack->size, stack->capacity));
     }
     else {
         stack->data = temp_data;
 
-        ON_DEBUG(fprintf(stderr, "MEOW I'm recalloc down, I do it %zu %zu\n", stack->size, stack->capacity);)
+        // ON_DEBUG(fprintf(stderr, "MEOW I'm recalloc down, I do it %zu %zu\n", stack->size, stack->capacity);)
     }    
 
     ON_CANARY(SettingCanariesToEnd(stack->data, stack->capacity));
