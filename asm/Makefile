@@ -15,19 +15,19 @@ null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,
 
 CPPFLAGS += $(SANITIZER_FLAGS)
 
-CPPSRC := main.cpp asm.cpp canary.cpp check_errors.cpp hash.cpp stack.cpp string_functions.cpp
+CPPSRC := main.cpp asm.cpp onegin.cpp
 
-CPPOBJ := $(CPPSRC:%.cpp=asm/build/%.o)
+CPPOBJ := $(CPPSRC:%.cpp=build/%.o) 
 
 HEADER_DEPENDS := $(CPPOBJ:%.o=%.d)
 
 .PHONY: all
 all: asm_prog
 
-$(CPPOBJ): asm/build/%.o: asm/%.cpp
+$(CPPOBJ): build/%.o: %.cpp
 	@$(CXX) $(CPPFLAGS) -MP -MMD -c $< -o $@
 
-asm_prog: $(CPPOBJ) 
+asm_prog: $(CPPOBJ)
 	@$(CXX) $^ -o $@ $(CPPFLAGS)
 
 -include $(HEADER_DEPENDS)

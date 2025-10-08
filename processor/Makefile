@@ -15,16 +15,16 @@ null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,
 
 CPPFLAGS += $(SANITIZER_FLAGS)
 
-CPPSRC := main.cpp processor.cpp canary.cpp check_errors.cpp hash.cpp stack.cpp string_functions.cpp
+CPPSRC := main.cpp canary.cpp check_errors.cpp hash.cpp processor.cpp onegin.cpp stack.cpp string_functions.cpp
 
-CPPOBJ := $(CPPSRC:%.cpp=processor/build/%.o)
+CPPOBJ := $(CPPSRC:%.cpp=build/%.o)
 
 HEADER_DEPENDS := $(CPPOBJ:%.o=%.d)
 
 .PHONY: all
 all: proc_prog
 
-$(CPPOBJ): processor/build/%.o: processor/%.cpp
+$(CPPOBJ): build/%.o: %.cpp
 	@$(CXX) $(CPPFLAGS) -MP -MMD -c $< -o $@
 
 proc_prog: $(CPPOBJ) 
