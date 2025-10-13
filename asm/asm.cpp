@@ -10,6 +10,12 @@
 #include "onegin.h"
 
 
+void AsmInitLabels(Assembler* assembler) {
+    for (int i = 0; i < CNT_LABELS; ++i) {
+        assembler->labels[i] = -1;
+    }
+}
+
 assembler_status AsmCtor(Assembler* assembler, const char* name_commands_file) {
     assert(assembler);
     assert(name_commands_file);
@@ -25,9 +31,13 @@ assembler_status AsmCtor(Assembler* assembler, const char* name_commands_file) {
         CHECK_AND_RETURN_ERRORS_ASM(ASM_NOT_ENOUGH_MEMORY);
     }
 
+    AsmInitLabels(assembler);
+
     CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
     CHECK_AND_RETURN_ERRORS_ASM(OneginReadFile(assembler),      free(assembler->byte_code_data.data));
+
+    CHECK_AND_RETURN_ERRORS_ASM(OneginFillPointersArray(assembler));
 
     return ASM_SUCCESS;
 }
@@ -99,15 +109,43 @@ assembler_status GetFillArgReg(Assembler* assembler, char* string) {
     return ASM_SUCCESS;
 }
 
+assembler_status GetFillArgJump(Assembler* assembler, char* string) {
+    if (GetFillArgNum(assembler, string) == ASM_SUCCESS) {
+        return ASM_SUCCESS;
+    }
+
+    if (!strncmp(string, ":", 1)) {                                             
+        int number = 0;                                                         
+                                                                                
+        if (sscanf(string, "%*c%d", &number) == 1) {
+            if (0 <= number && number <= 9) {
+                assembler->byte_code_data.data[assembler->byte_code_data.size] = assembler->labels[number];
+                assembler->byte_code_data.size++;
+
+                return ASM_SUCCESS;
+            }
+
+            return ASM_EXPECTS_JUMP_ARG;
+        }
+    }
+    
+    return ASM_EXPECTS_JUMP_ARG;
+}
+
+
 assembler_status PrintfByteCode(Assembler* assembler) {
     CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
     fprintf(stderr, "Byte code:\n");
-
     for (size_t i = 0; i < assembler->byte_code_data.size; ++i) {
         fprintf(stderr, TYPE_T_PRINTF_SPECIFIER " ", assembler->byte_code_data.data[i]);
     }
+    fprintf(stderr, "\n");
 
+    fprintf(stderr, "Labels:\n");
+    for (int i = 0; i < CNT_LABELS; ++i) {
+        fprintf(stderr, TYPE_T_PRINTF_SPECIFIER " ", assembler->labels[i]);
+    }
     fprintf(stderr, "\n");
 
     return ASM_SUCCESS;
@@ -118,11 +156,11 @@ assembler_status PrintfByteCode(Assembler* assembler) {
 assembler_status Assemblirovanie(Assembler* assembler) {
     CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
-    OneginFillPointersArray(assembler);
-
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
+    assembler->byte_code_data.size = 0;
 
     for (int i = 0; i < assembler->about_text.cnt_strok; ++i) {
+        CHECK_LABEL(assembler->about_text.pointer_on_text[i]);
+
         FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "PUSH", assembler->about_text.pointer_on_text[i], CMD_PUSH));
 
         FILL_COMMAND_WITHOUT_ARG(FillCommand(assembler, "POP",   assembler->about_text.pointer_on_text[i], CMD_POP));
@@ -138,13 +176,13 @@ assembler_status Assemblirovanie(Assembler* assembler) {
         FILL_COMMAND_WITH_ARG_REG(FillCommand(assembler, "PUSHR", assembler->about_text.pointer_on_text[i],  CMD_PUSHR));
         FILL_COMMAND_WITH_ARG_REG(FillCommand(assembler, "POPR",  assembler->about_text.pointer_on_text[i],  CMD_POPR));
 
-        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JMP", assembler->about_text.pointer_on_text[i], CMD_JMP));
-        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JB",  assembler->about_text.pointer_on_text[i], CMD_JB));
-        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JBE", assembler->about_text.pointer_on_text[i], CMD_JBE));
-        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JA",  assembler->about_text.pointer_on_text[i], CMD_JA));
-        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JAE", assembler->about_text.pointer_on_text[i], CMD_JAE));
-        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JE",  assembler->about_text.pointer_on_text[i], CMD_JE));
-        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "JNE", assembler->about_text.pointer_on_text[i], CMD_JNE));
+        FILL_JUMP_COMMAND(FillCommand(assembler, "JMP", assembler->about_text.pointer_on_text[i], CMD_JMP));
+        FILL_JUMP_COMMAND(FillCommand(assembler, "JB", assembler->about_text.pointer_on_text[i],  CMD_JB));
+        FILL_JUMP_COMMAND(FillCommand(assembler, "JBE", assembler->about_text.pointer_on_text[i], CMD_JBE));
+        FILL_JUMP_COMMAND(FillCommand(assembler, "JA", assembler->about_text.pointer_on_text[i],  CMD_JA));
+        FILL_JUMP_COMMAND(FillCommand(assembler, "JAE", assembler->about_text.pointer_on_text[i], CMD_JAE));
+        FILL_JUMP_COMMAND(FillCommand(assembler, "JE", assembler->about_text.pointer_on_text[i],  CMD_JE));
+        FILL_JUMP_COMMAND(FillCommand(assembler, "JNE", assembler->about_text.pointer_on_text[i], CMD_JNE));
 
         if (FillCommand(assembler, "HLT", assembler->about_text.pointer_on_text[i], CMD_HLT)) {
             break;
@@ -153,7 +191,6 @@ assembler_status Assemblirovanie(Assembler* assembler) {
         // if you here, it means that command is unknown
         CHECK_AND_RETURN_ERRORS_ASM(ASM_UNKNOWN_COMAND);
     }
-
 
     if (assembler->byte_code_data.data[assembler->byte_code_data.size - 1] != CMD_HLT) { // FIXME empty lines
         CHECK_AND_RETURN_ERRORS_ASM(ASM_EXPECTS_HLT);
