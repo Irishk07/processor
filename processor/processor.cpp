@@ -12,6 +12,13 @@
 #include "variable_information.h"
 
 
+void InitRegisters(Processor* processor) {
+    for (int i = 0; i < CNT_REGISTERS; ++i) {
+        processor->registers[i] = 0;
+    }
+}
+
+
 processor_status ProcCtor(Processor* processor, const char* name_byte_code_file) {
     assert(processor);
     assert(name_byte_code_file);
@@ -22,9 +29,7 @@ processor_status ProcCtor(Processor* processor, const char* name_byte_code_file)
 
     CHECK_AND_RETURN_ERRORS_STACK(STACK_CREATE(processor->stack, DEFAULT_START_CAPACITY));
 
-    for (int i = 0; i < CNT_REGISTERS; ++i) {
-        processor->registers[i] = 0;
-    }
+    InitRegisters(processor);
 
     CHECK_AND_RETURN_ERRORS_PROC(OneginReadFile(processor));
 
@@ -48,6 +53,26 @@ processor_status ProcVerify(Processor* processor) {
 
     return PROC_SUCCESS;
 }
+
+#define DO_CASE(function)                       \
+        CHECK_AND_RETURN_ERRORS_PROC(function); \
+        break;
+
+#define JB_SIGN <
+#define JBE_SIGN <=
+#define JA_SIGN >
+#define JAE_SIGN >=
+#define JE_SIGN ==
+#define JNE_SIGN !=
+
+#define DO_JUMP_CONDITION(sign, first_num, second_num)                       \
+    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &first_num));  \
+    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &second_num)); \
+    if (second_num sign first_num) {                                         \
+        CHECK_AND_RETURN_ERRORS_PROC(do_jmp(processor));                     \
+    }                                                                        \
+    else {processor->programm_cnt++;}                                        \
+    break;
 
 processor_status SPU(Processor* processor) {
     CHECK_AND_RETURN_ERRORS_PROC(ProcVerify(processor));
@@ -85,6 +110,12 @@ processor_status SPU(Processor* processor) {
             default:        return PROC_UNKNOWN_COMAND;
         }
 
+        // fprintf(stderr, "Stack: ");
+        // for (int i = 0; i < processor->stack.size; ++i) {
+        //     fprintf(stderr, TYPE_T_PRINTF_SPECIFIER " ", processor->stack.data[i]);
+        // }
+        // fprintf(stderr, "\n");
+
         if (command == CMD_HLT) {
             break;
         }
@@ -96,6 +127,16 @@ processor_status SPU(Processor* processor) {
 
     return PROC_SUCCESS;
 }
+
+#undef DO_CASE
+#undef DO_JUMP_CONDITION
+#undef JB_SIGN
+#undef JBE_SIGN
+#undef JA_SIGN
+#undef JAE_SIGN
+#undef JE_SIGN
+#undef JNE_SIGN
+
 
 void ProcDump(Processor* processor, type_error_t code_error, int line, const char* function_name, const char* file_name) {
     fprintf(stderr, "Called at %s() %s:%d:\n", function_name, file_name, line);
@@ -281,7 +322,7 @@ processor_status do_jmp(Processor* processor) {
     sscanf(processor->about_text.pointer_on_text[processor->programm_cnt], TYPE_T_PRINTF_SPECIFIER, &num);
     processor->programm_cnt = (size_t)(num - 1);
 
-    // getchar();
+    getchar();
 
     return PROC_SUCCESS;
 }

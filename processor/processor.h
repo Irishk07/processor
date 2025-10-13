@@ -5,36 +5,19 @@
 #include "stdio.h"
 
 #define CHECK_AND_RETURN_ERRORS_STACK(error, ...) \
-        if (error != STACK_SUCCESS) {             \
+        if ((error) != STACK_SUCCESS) {           \
             __VA_ARGS__;                          \
             return STACK_ERROR;                   \
         }
 
-#define CHECK_AND_RETURN_ERRORS_PROC(error, ...)       \
-        if (error != PROC_SUCCESS) {                   \
-            __VA_ARGS__;                               \
-            fprintf(stderr, "Line %d, error %d\n", __LINE__, error);      \
-            /* ProcDump(processor, error, DUMP_VAR_INFO); */ \
-            return error;                              \
+#define CHECK_AND_RETURN_ERRORS_PROC(error, ...)                     \
+        if ((error) != PROC_SUCCESS) {                               \
+            __VA_ARGS__;                                             \
+            fprintf(stderr, "Line %d, error %d\n", __LINE__, error); \
+            /* ProcDump(processor, error, DUMP_VAR_INFO); */         \
+            return (error);                                          \
         }
 
-#define DO_CASE(function)            \
-        CHECK_AND_RETURN_ERRORS_PROC(function); \
-        break;
-
-#define JB_SIGN <
-#define JBE_SIGN <=
-#define JA_SIGN >
-#define JAE_SIGN >=
-#define JE_SIGN ==
-#define JNE_SIGN !=
-
-#define DO_JUMP_CONDITION(sign, first_num, second_num)                                  \
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &first_num));             \
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &second_num));            \
-    if (second_num sign first_num) {CHECK_AND_RETURN_ERRORS_PROC(do_jmp(processor));}   \
-    else {processor->programm_cnt++;}                                                   \
-    break;
 
 const int CNT_REGISTERS = 8;
 
@@ -68,6 +51,7 @@ struct Processor {
 };
 
 
+void InitRegisters(Processor* processor);
 
 processor_status ProcCtor(Processor* processor, const char* file_name);
 
