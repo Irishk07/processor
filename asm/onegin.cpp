@@ -24,7 +24,6 @@ int OneginTextSize(const char *text_name) {
 
 assembler_status OneginReadFile(Assembler* assembler) {
     assert(assembler);
-    assert(assembler->byte_code_data.data);
     assert(assembler->about_text.text_name);
     
 
@@ -69,9 +68,8 @@ assembler_status OneginReadFile(Assembler* assembler) {
     return ASM_SUCCESS;
 }
 
-assembler_status OneginFillPointersArray(Assembler* assembler) {
+assembler_status DivisionIntoCommands(Assembler* assembler) {
     assert(assembler);
-    assert(assembler->byte_code_data.data);
     assert(assembler->about_text.text_name);
     assert(assembler->about_text.text);
 

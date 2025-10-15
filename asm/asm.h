@@ -12,47 +12,27 @@
             return (error);                            \
         }
 
-#define FILL_COMMAND_WITH_ARG_REG(function)                                                                    \
-        if (function) {                                                                                        \
-            CHECK_AND_RETURN_ERRORS_ASM(GetFillArgReg(assembler, assembler->about_text.pointer_on_text[++i])); \
-            continue;                                                                                          \
-        }
-
-#define FILL_COMMAND_WITH_ARG_NUM(function)                                                                    \
-        if (function) {                                                                                        \
-            CHECK_AND_RETURN_ERRORS_ASM(GetFillArgNum(assembler, assembler->about_text.pointer_on_text[++i])); \
-            continue;                                                                                          \
-        }
-
-#define FILL_COMMAND_WITHOUT_ARG(function) \
-        if (function) {                    \
-            continue;                      \
-        }
-
-#define FILL_JUMP_COMMAND(function)                                                                             \
-        if (function) {                                                                                         \
-            CHECK_AND_RETURN_ERRORS_ASM(GetFillArgJump(assembler, assembler->about_text.pointer_on_text[++i])); \
-            continue;                                                                                           \
-        }
-
+// TODO function
 #define CHECK_LABEL(string)                                                     \
     if (!strncmp(string, ":", 1)) {                                             \
         int number = 0;                                                         \
                                                                                 \
         if (sscanf(string, "%*c%d", &number) == 1) {                            \
             assembler->labels[number] = (type_t)assembler->byte_code_data.size; \
-            continue;                                                           \
+            break;                                                              \
         }                                                                       \
                                                                                 \
         else {                                                                  \
-            return ASM_EXPECTS_LABEL;                                           \
+            return ASM_NOT_FOUND_LABEL;                                           \
         }                                                                       \
     }
 
 
-const size_t SIZE_BYTE_CODE = 128;
 const int LEN_NAME_REGISTER = 3;
 const int CNT_LABELS        = 10;
+const int MAX_CNT_COMMANDS  = 128;
+const int FIRST_COMPILE     = 1;
+const int SECOND_COMPILE    = 2;
 
 
 enum assembler_status {
@@ -70,7 +50,7 @@ enum assembler_status {
     ASM_NULL_POINTER_ON_DATA         = 1 << 10,
     ASM_NULL_POINTER_ON_NAME_OF_FILE = 1 << 11,
     ASM_EXPECTS_JUMP_ARG             = 1 << 12,
-    ASM_EXPECTS_LABEL                = 1 << 13
+    ASM_NOT_FOUND_LABEL              = 1 << 13
 };
 
 enum status_cmp {
@@ -86,34 +66,54 @@ struct Byte_code_data {
     size_t capacity;
 };
 
+enum type_arguments {
+    NO_ARGUMENT    = 0,
+    NUM_ARGUMENT   = 1,
+    REG_ARGUMENT   = 2,
+    LABEL_ARGUMENT = 3
+};
+
+struct About_commands {
+    const char* command_name;
+    type_t command_code;
+    int code_of_type_argument;
+};
+
 struct Assembler {
     Byte_code_data byte_code_data;
     About_text about_text;
     type_t labels[CNT_LABELS];
+    About_commands about_commands[MAX_CNT_COMMANDS];
+    int cnt_commands;
+    const char* name_registers[CNT_REGISTERS] = {"RAX", "RBX", "RCX", "RDX", "REX", "RFX", "RGX", "RHX"};
 };
 
+
+void AsmInitInfoAboutCommands(Assembler* assembler);
 
 void AsmInitLabels(Assembler* assembler);
 
 assembler_status AsmCtor(Assembler* assembler, const char* name_comands_file);
 
-assembler_status AsmVerify(Assembler* assembler);
+assembler_status AsmVerify(const Assembler* assembler, int number_of_compile);
 
-status_cmp FillCommand(Assembler* assembler, const char* expecting_comand, char* comand, type_t code_expecting_comand);
+status_cmp FillCommand(Assembler* assembler, char* command, int index, int number_of_compile);
 
-assembler_status GetFillArgNum(Assembler* assembler, char* string);
+assembler_status GetFillArgNum(Assembler* assembler, char* string, int number_of_compile);
 
-assembler_status GetFillArgReg(Assembler* assembler, char* string);
+status_cmp CheckRegister(Assembler* assembler, char* string);
 
-assembler_status GetFillArgJump(Assembler* assembler, char* string);
+assembler_status GetFillArgReg(Assembler* assembler, char* string, int number_of_compile);
 
-assembler_status CheckLabels(Assembler* assembler, char* string);
+assembler_status GetFillArgJump(Assembler* assembler, char* string, int number_of_compile);
 
-assembler_status PrintfByteCode(Assembler* assembler);
+assembler_status PrintfByteCode(Assembler* assembler, int number_of_compile);
 
-assembler_status Assemblirovanie(Assembler* assembler);
+assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile);
 
-assembler_status CreateExeFile(Assembler* assembler, const char* name_byte_code_file);
+assembler_status CreatByteCodeData(Assembler* assembler);
+
+assembler_status CreateExeFile(const Assembler* assembler, const char* name_byte_code_file);
 
 assembler_status AsmDtor(Assembler* assembler);
 

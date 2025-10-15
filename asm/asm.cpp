@@ -10,6 +10,34 @@
 #include "onegin.h"
 
 
+void AsmInitInfoAboutCommands(Assembler* assembler) {
+    assert(assembler);
+    
+    for (int i = 0; i < MAX_CNT_COMMANDS; ++i) {
+        assembler->about_commands[i] = {};
+    }
+
+    assembler->about_commands[CMD_PUSH]  = {.command_name = "PUSH",  .command_code = CMD_PUSH,  .code_of_type_argument = NUM_ARGUMENT};
+    assembler->about_commands[CMD_POP]   = {.command_name = "POP",   .command_code = CMD_POP,   .code_of_type_argument = NO_ARGUMENT};
+    assembler->about_commands[CMD_ADD]   = {.command_name = "ADD",   .command_code = CMD_ADD,   .code_of_type_argument = NO_ARGUMENT};
+    assembler->about_commands[CMD_SUB]   = {.command_name = "SUB",   .command_code = CMD_SUB,   .code_of_type_argument = NO_ARGUMENT};
+    assembler->about_commands[CMD_DIV]   = {.command_name = "DIV",   .command_code = CMD_DIV,   .code_of_type_argument = NO_ARGUMENT};
+    assembler->about_commands[CMD_MUL]   = {.command_name = "MUL",   .command_code = CMD_MUL,   .code_of_type_argument = NO_ARGUMENT};
+    assembler->about_commands[CMD_SQRT]  = {.command_name = "SQRT",  .command_code = CMD_SQRT,  .code_of_type_argument = NO_ARGUMENT};
+    assembler->about_commands[CMD_POW]   = {.command_name = "POW",   .command_code = CMD_POW,   .code_of_type_argument = NO_ARGUMENT};
+    assembler->about_commands[CMD_IN]    = {.command_name = "IN",    .command_code = CMD_IN,    .code_of_type_argument = NO_ARGUMENT};
+    assembler->about_commands[CMD_OUT]   = {.command_name = "OUT",   .command_code = CMD_OUT,   .code_of_type_argument = NO_ARGUMENT};
+    assembler->about_commands[CMD_HLT]   = {.command_name = "HLT",   .command_code = CMD_HLT,   .code_of_type_argument = NO_ARGUMENT};
+    assembler->about_commands[CMD_JB]    = {.command_name = "JB",    .command_code = CMD_JB,    .code_of_type_argument = LABEL_ARGUMENT};
+    assembler->about_commands[CMD_JBE]   = {.command_name = "JBE",   .command_code = CMD_JBE,   .code_of_type_argument = LABEL_ARGUMENT};
+    assembler->about_commands[CMD_JA]    = {.command_name = "JA",    .command_code = CMD_JA,    .code_of_type_argument = LABEL_ARGUMENT};
+    assembler->about_commands[CMD_JAE]   = {.command_name = "JAE",   .command_code = CMD_JAE,   .code_of_type_argument = LABEL_ARGUMENT};
+    assembler->about_commands[CMD_JE]    = {.command_name = "JE",    .command_code = CMD_JE,    .code_of_type_argument = LABEL_ARGUMENT};
+    assembler->about_commands[CMD_JNE]   = {.command_name = "JNE",   .command_code = CMD_JNE,   .code_of_type_argument = LABEL_ARGUMENT};
+    assembler->about_commands[CMD_PUSHR] = {.command_name = "PUSHR", .command_code = CMD_PUSHR, .code_of_type_argument = REG_ARGUMENT};
+    assembler->about_commands[CMD_POPR]  = {.command_name = "POPR",  .command_code = CMD_POPR,  .code_of_type_argument = REG_ARGUMENT};
+}
+
 void AsmInitLabels(Assembler* assembler) {
     for (int i = 0; i < CNT_LABELS; ++i) {
         assembler->labels[i] = -1;
@@ -21,34 +49,28 @@ assembler_status AsmCtor(Assembler* assembler, const char* name_commands_file) {
     assert(name_commands_file);
 
     assembler->about_text.text_name = name_commands_file;
+    assembler->cnt_commands            = 0;
 
-    assembler->byte_code_data.capacity = SIZE_BYTE_CODE;
-    assembler->byte_code_data.size     = 0;
-
-    assembler->byte_code_data.data = (type_t*)calloc(assembler->byte_code_data.capacity, sizeof(type_t));
-
-    if (assembler->byte_code_data.data == NULL){
-        CHECK_AND_RETURN_ERRORS_ASM(ASM_NOT_ENOUGH_MEMORY);
-    }
+    AsmInitInfoAboutCommands(assembler);
 
     AsmInitLabels(assembler);
 
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
-
     CHECK_AND_RETURN_ERRORS_ASM(OneginReadFile(assembler),      free(assembler->byte_code_data.data));
 
-    CHECK_AND_RETURN_ERRORS_ASM(OneginFillPointersArray(assembler));
+    CHECK_AND_RETURN_ERRORS_ASM(DivisionIntoCommands(assembler));
+
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, FIRST_COMPILE));
 
     return ASM_SUCCESS;
 }
 
 
-assembler_status AsmVerify(Assembler* assembler) {
+assembler_status AsmVerify(const Assembler* assembler, int number_of_compile) {
     if (assembler == NULL) {
         return ASM_NULL_POINTER_ON_STRUCT; 
     }
 
-    if (assembler->byte_code_data.data == NULL) {
+    if (number_of_compile == SECOND_COMPILE && assembler->byte_code_data.data == NULL) {
         return ASM_NULL_POINTER_ON_DATA;
     }
 
@@ -60,9 +82,17 @@ assembler_status AsmVerify(Assembler* assembler) {
 }
 
 
-status_cmp FillCommand(Assembler* assembler, const char* expecting_comand, char* comand, type_t code_expecting_comand) { //FIXME Verify how realize
-    if(!strcmp(expecting_comand, (const char*)comand)) {
-        assembler->byte_code_data.data[assembler->byte_code_data.size] = code_expecting_comand;
+status_cmp FillCommand(Assembler* assembler, char* command, int index, int number_of_compile) { //FIXME Verify how realize
+    assert(assembler);
+
+    if (number_of_compile == FIRST_COMPILE) return EQUAL;    
+
+    if (assembler->about_commands[index].command_name == NULL) {
+        return DIFFERENT;
+    }
+
+    if(!strcmp(assembler->about_commands[index].command_name, (const char*)command)) {
+        assembler->byte_code_data.data[assembler->byte_code_data.size] = assembler->about_commands[index].command_code;
         assembler->byte_code_data.size++;
 
         return EQUAL;
@@ -71,8 +101,10 @@ status_cmp FillCommand(Assembler* assembler, const char* expecting_comand, char*
     return DIFFERENT;
 }
 
-assembler_status GetFillArgNum(Assembler* assembler, char* string) {
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
+assembler_status GetFillArgNum(Assembler* assembler, char* string, int number_of_compile) {
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
+
+    if (number_of_compile == FIRST_COMPILE) return ASM_SUCCESS;    
 
     type_t number = 0;
 
@@ -84,43 +116,55 @@ assembler_status GetFillArgNum(Assembler* assembler, char* string) {
         return ASM_EXPECTS_NUMBER;
     }
 
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
 
     return ASM_SUCCESS;
 }
 
-assembler_status GetFillArgReg(Assembler* assembler, char* string) {
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
-
-    char reg[LEN_NAME_REGISTER + 1] = {};
-
-    // 3 = LEN_NAME_REGISTER
-    if (sscanf(string, "%3s", reg) == 1) {
-        type_t code_reg = reg[1] - 'A';
-        assembler->byte_code_data.data[assembler->byte_code_data.size] = code_reg;
-        assembler->byte_code_data.size++;
+status_cmp CheckRegister(Assembler* assembler, char* string) {
+    for (int i = 0; i < CNT_REGISTERS; ++i) {
+        if (!strcmp(assembler->name_registers[i], string)) return EQUAL;
     }
-    else {
+
+    return DIFFERENT;
+}
+
+assembler_status GetFillArgReg(Assembler* assembler, char* string, int number_of_compile) {
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
+
+    if (number_of_compile == FIRST_COMPILE) return ASM_SUCCESS;    
+
+    if (!CheckRegister(assembler, string)) {
         return ASM_EXPECTS_REGISTER;
     }
 
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
+    type_t code_reg = string[1] - 'A';
+    assembler->byte_code_data.data[assembler->byte_code_data.size] = code_reg;
+    assembler->byte_code_data.size++;
+
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
 
     return ASM_SUCCESS;
 }
 
-assembler_status GetFillArgJump(Assembler* assembler, char* string) {
-    if (GetFillArgNum(assembler, string) == ASM_SUCCESS) {
+assembler_status GetFillArgJump(Assembler* assembler, char* string, int number_of_compile) {
+    if (GetFillArgNum(assembler, string, number_of_compile) == ASM_SUCCESS) {
         return ASM_SUCCESS;
     }
 
-    if (!strncmp(string, ":", 1)) {                                             
+    if (*string == ':') {                                         
         int number = 0;                                                         
                                                                                 
         if (sscanf(string, "%*c%d", &number) == 1) {
             if (0 <= number && number <= 9) {
-                assembler->byte_code_data.data[assembler->byte_code_data.size] = assembler->labels[number];
-                assembler->byte_code_data.size++;
+                if (number_of_compile == SECOND_COMPILE && assembler->labels[number] == -1) {
+                    return ASM_NOT_FOUND_LABEL;
+                }
+
+                if (number_of_compile == SECOND_COMPILE) {
+                    assembler->byte_code_data.data[assembler->byte_code_data.size] = assembler->labels[number];
+                    assembler->byte_code_data.size++;
+                }
 
                 return ASM_SUCCESS;
             }
@@ -133,8 +177,10 @@ assembler_status GetFillArgJump(Assembler* assembler, char* string) {
 }
 
 
-assembler_status PrintfByteCode(Assembler* assembler) {
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
+assembler_status PrintfByteCode(Assembler* assembler, int number_of_compile) {
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
+
+    fprintf(stderr, "Compile number %d:\n", number_of_compile);
 
     fprintf(stderr, "Byte code:\n");
     for (size_t i = 0; i < assembler->byte_code_data.size; ++i) {
@@ -146,67 +192,74 @@ assembler_status PrintfByteCode(Assembler* assembler) {
     for (int i = 0; i < CNT_LABELS; ++i) {
         fprintf(stderr, TYPE_T_PRINTF_SPECIFIER " ", assembler->labels[i]);
     }
-    fprintf(stderr, "\n");
+    fprintf(stderr, "\n\n");
 
     return ASM_SUCCESS;
 
     // getchar(); // TODO print message
 }
 
-assembler_status Assemblirovanie(Assembler* assembler) {
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
-
-    assembler->byte_code_data.size = 0;
+assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
 
     for (int i = 0; i < assembler->about_text.cnt_strok; ++i) {
-        CHECK_LABEL(assembler->about_text.pointer_on_text[i]);
+        int index = 0;
 
-        FILL_COMMAND_WITH_ARG_NUM(FillCommand(assembler, "PUSH", assembler->about_text.pointer_on_text[i], CMD_PUSH));
+        for( ; index < MAX_CNT_COMMANDS; ++index) {
+            CHECK_LABEL(assembler->about_text.pointer_on_text[i]);
+            
+            if (FillCommand(assembler, assembler->about_text.pointer_on_text[i], index, number_of_compile)) {
+                assembler->cnt_commands++;
 
-        FILL_COMMAND_WITHOUT_ARG(FillCommand(assembler, "POP",   assembler->about_text.pointer_on_text[i], CMD_POP));
-        FILL_COMMAND_WITHOUT_ARG(FillCommand(assembler, "ADD",   assembler->about_text.pointer_on_text[i], CMD_ADD));
-        FILL_COMMAND_WITHOUT_ARG(FillCommand(assembler, "SUB",   assembler->about_text.pointer_on_text[i], CMD_SUB));
-        FILL_COMMAND_WITHOUT_ARG(FillCommand(assembler, "DIV",   assembler->about_text.pointer_on_text[i], CMD_DIV));
-        FILL_COMMAND_WITHOUT_ARG(FillCommand(assembler, "MUL",   assembler->about_text.pointer_on_text[i], CMD_MUL));
-        FILL_COMMAND_WITHOUT_ARG(FillCommand(assembler, "SQRT",  assembler->about_text.pointer_on_text[i], CMD_SQRT));
-        FILL_COMMAND_WITHOUT_ARG(FillCommand(assembler, "POW",   assembler->about_text.pointer_on_text[i], CMD_POW));
-        FILL_COMMAND_WITHOUT_ARG(FillCommand(assembler, "IN",    assembler->about_text.pointer_on_text[i], CMD_IN));
-        FILL_COMMAND_WITHOUT_ARG(FillCommand(assembler, "OUT",   assembler->about_text.pointer_on_text[i], CMD_OUT));
+                if (assembler->about_commands[index].code_of_type_argument == NUM_ARGUMENT)   
+                    CHECK_AND_RETURN_ERRORS_ASM(GetFillArgNum(assembler, assembler->about_text.pointer_on_text[++i], number_of_compile));
+                    assembler->cnt_commands++;
+                    
+                if (assembler->about_commands[index].code_of_type_argument == REG_ARGUMENT)   
+                    CHECK_AND_RETURN_ERRORS_ASM(GetFillArgReg(assembler, assembler->about_text.pointer_on_text[++i], number_of_compile));
+                    assembler->cnt_commands++;
 
-        FILL_COMMAND_WITH_ARG_REG(FillCommand(assembler, "PUSHR", assembler->about_text.pointer_on_text[i],  CMD_PUSHR));
-        FILL_COMMAND_WITH_ARG_REG(FillCommand(assembler, "POPR",  assembler->about_text.pointer_on_text[i],  CMD_POPR));
+                if (assembler->about_commands[index].code_of_type_argument == LABEL_ARGUMENT)
+                    CHECK_AND_RETURN_ERRORS_ASM(GetFillArgJump(assembler, assembler->about_text.pointer_on_text[++i], number_of_compile));
+                    assembler->cnt_commands++;
 
-        FILL_JUMP_COMMAND(FillCommand(assembler, "JMP", assembler->about_text.pointer_on_text[i], CMD_JMP));
-        FILL_JUMP_COMMAND(FillCommand(assembler, "JB", assembler->about_text.pointer_on_text[i],  CMD_JB));
-        FILL_JUMP_COMMAND(FillCommand(assembler, "JBE", assembler->about_text.pointer_on_text[i], CMD_JBE));
-        FILL_JUMP_COMMAND(FillCommand(assembler, "JA", assembler->about_text.pointer_on_text[i],  CMD_JA));
-        FILL_JUMP_COMMAND(FillCommand(assembler, "JAE", assembler->about_text.pointer_on_text[i], CMD_JAE));
-        FILL_JUMP_COMMAND(FillCommand(assembler, "JE", assembler->about_text.pointer_on_text[i],  CMD_JE));
-        FILL_JUMP_COMMAND(FillCommand(assembler, "JNE", assembler->about_text.pointer_on_text[i], CMD_JNE));
-
-        if (FillCommand(assembler, "HLT", assembler->about_text.pointer_on_text[i], CMD_HLT)) {
-            break;
+                break;
+            }
         }
 
-        // if you here, it means that command is unknown
-        CHECK_AND_RETURN_ERRORS_ASM(ASM_UNKNOWN_COMAND);
+        if (index == MAX_CNT_COMMANDS) {
+            CHECK_AND_RETURN_ERRORS_ASM(ASM_UNKNOWN_COMAND);
+        }
     }
 
-    if (assembler->byte_code_data.data[assembler->byte_code_data.size - 1] != CMD_HLT) { // FIXME empty lines
+    if (number_of_compile == SECOND_COMPILE && assembler->byte_code_data.data[assembler->byte_code_data.size - 1] != CMD_HLT) { // FIXME empty lines
         CHECK_AND_RETURN_ERRORS_ASM(ASM_EXPECTS_HLT);
     }
     
-    PrintfByteCode(assembler);
+    PrintfByteCode(assembler, number_of_compile);
 
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
 
     return ASM_SUCCESS;
 }
 
-assembler_status CreateExeFile(Assembler* assembler, const char* name_byte_code_file) {
+assembler_status CreatByteCodeData(Assembler* assembler) {
+    assembler->byte_code_data.capacity = (size_t)assembler->cnt_commands;
+    assembler->byte_code_data.size     = 0;
+
+    assembler->byte_code_data.data = (type_t*)calloc(assembler->byte_code_data.capacity, sizeof(type_t));
+
+    if (assembler->byte_code_data.data == NULL){
+        CHECK_AND_RETURN_ERRORS_ASM(ASM_NOT_ENOUGH_MEMORY);
+    }
+
+    return ASM_SUCCESS;
+}
+
+assembler_status CreateExeFile(const Assembler* assembler, const char* name_byte_code_file) {
     assert(name_byte_code_file);
-    assert(assembler->about_text.pointer_on_text); // FIXME
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
+    assert(assembler->about_text.pointer_on_text);
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, SECOND_COMPILE));
 
     FILE* text = fopen(name_byte_code_file, "w");
     if (text == NULL) {
@@ -223,13 +276,11 @@ assembler_status CreateExeFile(Assembler* assembler, const char* name_byte_code_
         CHECK_AND_RETURN_ERRORS_ASM(ASM_CLOSE_ERROR,      perror("Error is"));
     }
 
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
-
     return ASM_SUCCESS;
 }
 
 assembler_status AsmDtor(Assembler* assembler) {
-    assembler_status code_error = AsmVerify(assembler);
+    assembler_status code_error = AsmVerify(assembler, SECOND_COMPILE);
 
     free(assembler->byte_code_data.data);
     free(assembler->about_text.text);

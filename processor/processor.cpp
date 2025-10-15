@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <math.h>
+#include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 
@@ -12,13 +13,6 @@
 #include "variable_information.h"
 
 
-void InitRegisters(Processor* processor) {
-    for (int i = 0; i < CNT_REGISTERS; ++i) {
-        processor->registers[i] = 0;
-    }
-}
-
-
 processor_status ProcCtor(Processor* processor, const char* name_byte_code_file) {
     assert(processor);
     assert(name_byte_code_file);
@@ -29,18 +23,18 @@ processor_status ProcCtor(Processor* processor, const char* name_byte_code_file)
 
     CHECK_AND_RETURN_ERRORS_STACK(STACK_CREATE(processor->stack, DEFAULT_START_CAPACITY));
 
-    InitRegisters(processor);
+    memset(processor->registers, 0, CNT_REGISTERS * sizeof(type_t));
 
     CHECK_AND_RETURN_ERRORS_PROC(OneginReadFile(processor));
 
-    CHECK_AND_RETURN_ERRORS_PROC(OneginFillPointersArray(processor));
+    CHECK_AND_RETURN_ERRORS_PROC(DivisionIntoCommands(processor)); // FIXME rename
 
     CHECK_AND_RETURN_ERRORS_PROC(ProcVerify(processor));
 
     return PROC_SUCCESS;
 }
 
-processor_status ProcVerify(Processor* processor) {
+processor_status ProcVerify(const Processor* processor) {
     if (processor == NULL) {
         return PROC_NULL_POINTER_ON_STRUCT;
     }
@@ -65,21 +59,23 @@ processor_status ProcVerify(Processor* processor) {
 #define JE_SIGN ==
 #define JNE_SIGN !=
 
-#define DO_JUMP_CONDITION(sign, first_num, second_num)                       \
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &first_num));  \
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &second_num)); \
-    if (second_num sign first_num) {                                         \
-        CHECK_AND_RETURN_ERRORS_PROC(do_jmp(processor));                     \
-    }                                                                        \
-    else {processor->programm_cnt++;}                                        \
-    break;
+#define DO_JUMP_CONDITION(sign)                                                  \
+    {                                                                            \
+        type_t first_num  = 0;                                                   \
+        type_t second_num = 0;                                                   \
+        CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &first_num));  \
+        CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &second_num)); \
+        if (second_num sign first_num) {                                         \
+            CHECK_AND_RETURN_ERRORS_PROC(do_jmp(processor));                     \
+        }                                                                        \
+        else {processor->programm_cnt++;}                                        \
+        break;                                                                   \
+    }
 
 processor_status SPU(Processor* processor) {
     CHECK_AND_RETURN_ERRORS_PROC(ProcVerify(processor));
 
-    type_t command    = 0;
-    type_t first_num  = 0;
-    type_t second_num = 0;
+    type_t command = 0;
 
     while (true) {
         if (sscanf(processor->about_text.pointer_on_text[processor->programm_cnt], TYPE_T_PRINTF_SPECIFIER, &command) != 1) {
@@ -99,22 +95,16 @@ processor_status SPU(Processor* processor) {
             case CMD_POPR:  DO_CASE(do_popr(processor));
             case CMD_PUSHR: DO_CASE(do_pushr(processor));
             case CMD_JMP:   DO_CASE(do_jmp(processor));
-            case CMD_JB:    DO_JUMP_CONDITION(JB_SIGN,  first_num, second_num);
-            case CMD_JBE:   DO_JUMP_CONDITION(JBE_SIGN, first_num, second_num);
-            case CMD_JA:    DO_JUMP_CONDITION(JA_SIGN,  first_num, second_num);
-            case CMD_JAE:   DO_JUMP_CONDITION(JAE_SIGN, first_num, second_num);
-            case CMD_JE:    DO_JUMP_CONDITION(JE_SIGN,  first_num, second_num);
-            case CMD_JNE:   DO_JUMP_CONDITION(JNE_SIGN, first_num, second_num);
+            case CMD_JB:    DO_JUMP_CONDITION(JB_SIGN);
+            case CMD_JBE:   DO_JUMP_CONDITION(JBE_SIGN);
+            case CMD_JA:    DO_JUMP_CONDITION(JA_SIGN);
+            case CMD_JAE:   DO_JUMP_CONDITION(JAE_SIGN);
+            case CMD_JE:    DO_JUMP_CONDITION(JE_SIGN);
+            case CMD_JNE:   DO_JUMP_CONDITION(JNE_SIGN);
             case CMD_OUT:   DO_CASE(do_out(processor));
             case CMD_HLT:   break;
             default:        return PROC_UNKNOWN_COMAND;
         }
-
-        // fprintf(stderr, "Stack: ");
-        // for (int i = 0; i < processor->stack.size; ++i) {
-        //     fprintf(stderr, TYPE_T_PRINTF_SPECIFIER " ", processor->stack.data[i]);
-        // }
-        // fprintf(stderr, "\n");
 
         if (command == CMD_HLT) {
             break;
@@ -138,7 +128,7 @@ processor_status SPU(Processor* processor) {
 #undef JNE_SIGN
 
 
-void ProcDump(Processor* processor, type_error_t code_error, int line, const char* function_name, const char* file_name) {
+void ProcDump(const Processor* processor, type_error_t code_error, int line, const char* function_name, const char* file_name) {
     fprintf(stderr, "Called at %s() %s:%d:\n", function_name, file_name, line);
 
     fprintf(stderr, "Count commands is: %zu\n", processor->cnt_commands);
@@ -172,6 +162,9 @@ processor_status ProcDtor(Processor* processor) {
 
 
 processor_status do_push(Processor* processor) {
+    assert(processor);
+    assert(processor->about_text.pointer_on_text);
+
     type_t num = 0;
     processor->programm_cnt++;
 
@@ -182,6 +175,8 @@ processor_status do_push(Processor* processor) {
 }
 
 processor_status do_pop(Processor* processor) {
+    assert(processor);
+    
     type_t deleted_value = 0;
 
     CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &deleted_value));
@@ -190,6 +185,8 @@ processor_status do_pop(Processor* processor) {
 }
 
 processor_status do_add(Processor* processor) {
+    assert(processor);
+
     type_t first_num  = 0;
     type_t second_num = 0;
 
@@ -201,6 +198,8 @@ processor_status do_add(Processor* processor) {
 }
 
 processor_status do_sub(Processor* processor) {
+    assert(processor);
+
     type_t first_num  = 0;
     type_t second_num = 0;
 
@@ -212,6 +211,8 @@ processor_status do_sub(Processor* processor) {
 }
 
 processor_status do_div(Processor* processor) {
+    assert(processor);
+
     type_t first_num  = 0;
     type_t second_num = 0;
 
@@ -229,6 +230,8 @@ processor_status do_div(Processor* processor) {
 }
 
 processor_status do_mul(Processor* processor) {
+    assert(processor);
+
     type_t first_num  = 0;
     type_t second_num = 0;
 
@@ -240,6 +243,8 @@ processor_status do_mul(Processor* processor) {
 }
 
 processor_status do_sqrt(Processor* processor) {
+    assert(processor);
+
     type_t num = 0;
 
     CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &num));
@@ -255,6 +260,8 @@ processor_status do_sqrt(Processor* processor) {
 }
 
 processor_status do_pow(Processor* processor) {
+    assert(processor);
+
     type_t first_num  = 0;
     type_t second_num = 0;
 
@@ -266,15 +273,20 @@ processor_status do_pow(Processor* processor) {
 }
 
 processor_status do_in(Processor* processor) {
+    assert(processor);
+    
     type_t num  = 0;
 
-    scanf(TYPE_T_PRINTF_SPECIFIER, &num);
+    scanf(TYPE_T_PRINTF_SPECIFIER, &num); // TODO check error
     CHECK_AND_RETURN_ERRORS_STACK(StackPush(&processor->stack, num));
 
     return PROC_SUCCESS;
 }
 
 processor_status do_popr(Processor* processor) {
+    assert(processor);
+    assert(processor->about_text.pointer_on_text);
+
     type_t num = 0;
     type_t code_reg  = 0;
 
@@ -292,6 +304,9 @@ processor_status do_popr(Processor* processor) {
 }
 
 processor_status do_pushr(Processor* processor) {
+    assert(processor);
+    assert(processor->about_text.pointer_on_text);
+
     type_t code_reg  = 0;
     processor->programm_cnt++;
 
@@ -307,6 +322,8 @@ processor_status do_pushr(Processor* processor) {
 }
 
 processor_status do_out(Processor* processor) {
+    assert(processor);
+
     type_t num = 0;
 
     CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &num));
@@ -316,13 +333,16 @@ processor_status do_out(Processor* processor) {
 }
 
 processor_status do_jmp(Processor* processor) {
+    assert(processor);
+    assert(processor->about_text.pointer_on_text);
+
     type_t num = 0;
     processor->programm_cnt++;
 
     sscanf(processor->about_text.pointer_on_text[processor->programm_cnt], TYPE_T_PRINTF_SPECIFIER, &num);
     processor->programm_cnt = (size_t)(num - 1);
 
-    getchar();
+    // getchar();
 
     return PROC_SUCCESS;
 }

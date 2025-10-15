@@ -19,7 +19,7 @@ size_t OffsetDueCanaries(size_t count_canaries) {
     return (count_canaries == 0) ? 0 : 1;
 }
 
-size_t OffsetToLastElement(size_t size, size_t count_canaries) {
+size_t OffsetToLastElement(size_t size, size_t count_canaries) { // FIXME
     return size + OffsetDueCanaries(count_canaries) - 1;
 }
 
@@ -91,6 +91,10 @@ type_error_t StackCtorDebug(stack_t* stack, size_t start_capacity, debug_info_t 
 )
 
 type_error_t StackReSize(stack_t* stack, size_t old_capacity) {
+    assert(stack);
+    assert(old_capacity > 0);
+    assert(stack->capacity > 0);
+
     type_t* temp_data = (type_t*)my_recalloc(stack->data, RealSizeStack(stack->capacity, CNT_CANARIES) * sizeof(type_t), 
                                                           RealSizeStack(old_capacity, CNT_CANARIES) * sizeof(type_t));
 
@@ -104,12 +108,12 @@ type_error_t StackReSize(stack_t* stack, size_t old_capacity) {
         
         init_with_poisons(stack->data + OffsetToLastElement(stack->size, CNT_CANARIES), stack->capacity - stack->size);
 
-        // ON_DEBUG(fprintf(stderr, "MEOW I'm recalloc up, I do it %zu %zu\n", stack->size, stack->capacity));
+        // ON_DEBUG(fprintf(stderr, "MEOW I'm recalloc up, I do it, size %zu, capacity %zu\n", stack->size, stack->capacity));
     }
     else {
         stack->data = temp_data;
 
-        // ON_DEBUG(fprintf(stderr, "MEOW I'm recalloc down, I do it %zu %zu\n", stack->size, stack->capacity);)
+        // ON_DEBUG(fprintf(stderr, "MEOW I'm recalloc down, I do it, size %zu, capacity %zu\n", stack->size, stack->capacity);)
     }    
 
     ON_CANARY(SettingCanariesToEnd(stack->data, stack->capacity));

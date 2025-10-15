@@ -8,7 +8,7 @@
 #include "variable_information.h"
 
 
-type_error_t StackVerify(stack_t* stack) {
+type_error_t StackVerify(const stack_t* stack) {
     type_error_t code_error = STACK_SUCCESS;
 
     if (stack == NULL) {
@@ -75,7 +75,7 @@ void StackPrintError(type_error_t code_error) {
     if (code_error & CORRUPTED_STRUCT_HASH)     fprintf(stderr, "    Error is: struct hash is corrupted\n");
 }
 
-void StackDump(stack_t* stack, type_error_t code_error, int line, const char* function_name, const char* file_name) {
+void StackDump(const stack_t* stack, type_error_t code_error, int line, const char* function_name, const char* file_name) {
     fprintf(stderr, "%s <%s>[%p] ", "stack_t", TYPE_NAME, &stack);
 
     PRINT_DUMP_DEBUG_INFO(stack);

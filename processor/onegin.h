@@ -7,6 +7,6 @@ int OneginTextSize(const char *text_name);
 
 processor_status OneginReadFile(Processor* processor);
 
-processor_status OneginFillPointersArray(Processor* processor);
+processor_status DivisionIntoCommands(Processor* processor);
 
 #endif // ONEGIN_H_

@@ -9,6 +9,8 @@ typedef long type_t;
 
 typedef uint64_t type_error_t;
 
+const int CNT_REGISTERS = 8;
+
 
 enum code_comand {
     CMD_PUSH  = 1,

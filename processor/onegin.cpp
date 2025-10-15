@@ -66,7 +66,7 @@ processor_status OneginReadFile(Processor* processor) {
     return PROC_SUCCESS;
 }
 
-processor_status OneginFillPointersArray(Processor* processor) {
+processor_status DivisionIntoCommands(Processor* processor) {
     assert(processor);
     assert(processor->about_text.text);
     assert(processor->about_text.text_name);

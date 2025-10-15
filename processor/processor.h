@@ -19,9 +19,6 @@
         }
 
 
-const int CNT_REGISTERS = 8;
-
-
 enum processor_status {
     PROC_SUCCESS                  = 0,
     PROC_UNKNOWN_COMAND           = 1 << 0,
@@ -51,15 +48,13 @@ struct Processor {
 };
 
 
-void InitRegisters(Processor* processor);
-
 processor_status ProcCtor(Processor* processor, const char* file_name);
 
 processor_status SPU(Processor* processor);
 
-processor_status ProcVerify(Processor* processor);
+processor_status ProcVerify(const Processor* processor);
 
-void ProcDump(Processor* processor, type_error_t code_error, int line, const char* function_name, const char* file_name);
+void ProcDump(const Processor* processor, type_error_t code_error, int line, const char* function_name, const char* file_name);
 
 processor_status ProcDtor(Processor* processor);
 

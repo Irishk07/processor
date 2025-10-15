@@ -10,7 +10,7 @@ int OneginTextSize(const char *text_name);
 
 assembler_status OneginReadFile(Assembler* assembler);
 
-assembler_status OneginFillPointersArray(Assembler* assembler);
+assembler_status DivisionIntoCommands(Assembler* assembler);
 
 
 #endif // ONEGIN_H_
