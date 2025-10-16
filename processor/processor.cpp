@@ -22,6 +22,7 @@ processor_status ProcCtor(Processor* processor, const char* name_byte_code_file)
     processor->cnt_commands = 0;
 
     CHECK_AND_RETURN_ERRORS_STACK(STACK_CREATE(processor->stack, DEFAULT_START_CAPACITY));
+    CHECK_AND_RETURN_ERRORS_STACK(STACK_CREATE(processor->return_stack, DEFAULT_START_CAPACITY));
 
     memset(processor->registers, 0, CNT_REGISTERS * sizeof(type_t));
 
@@ -73,6 +74,8 @@ processor_status ProcVerify(const Processor* processor) {
     }
 
 processor_status SPU(Processor* processor) {
+    // assert(processor->about_text.text);
+
     CHECK_AND_RETURN_ERRORS_PROC(ProcVerify(processor));
 
     type_t command = 0;
@@ -101,6 +104,8 @@ processor_status SPU(Processor* processor) {
             case CMD_JAE:   DO_JUMP_CONDITION(JAE_SIGN);
             case CMD_JE:    DO_JUMP_CONDITION(JE_SIGN);
             case CMD_JNE:   DO_JUMP_CONDITION(JNE_SIGN);
+            case CMD_CALL:  DO_CASE(do_call(processor));
+            case CMD_RET:   DO_CASE(do_ret(processor));
             case CMD_OUT:   DO_CASE(do_out(processor));
             case CMD_HLT:   break;
             default:        return PROC_UNKNOWN_COMAND;
@@ -151,6 +156,7 @@ processor_status ProcDtor(Processor* processor) {
     processor_status code_error = ProcVerify(processor);
 
     StackDtor(&processor->stack);
+    StackDtor(&processor->return_stack);
     
     free(processor->about_text.text);
     free(processor->about_text.pointer_on_text);
@@ -342,7 +348,32 @@ processor_status do_jmp(Processor* processor) {
     sscanf(processor->about_text.pointer_on_text[processor->programm_cnt], TYPE_T_PRINTF_SPECIFIER, &num);
     processor->programm_cnt = (size_t)(num - 1);
 
+    // fprintf(stderr, "%zu\n", processor->programm_cnt);
+
     // getchar();
+
+    return PROC_SUCCESS;
+}
+
+processor_status do_call(Processor* processor) {
+    assert(processor);
+
+    CHECK_AND_RETURN_ERRORS_STACK(StackPush(&processor->return_stack, (type_t)processor->programm_cnt + 2));
+
+    CHECK_AND_RETURN_ERRORS_PROC(do_jmp(processor));
+
+    return PROC_SUCCESS;
+}
+
+processor_status do_ret(Processor* processor) {
+    assert(processor);
+
+    type_t last_value = 0;
+    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->return_stack, &last_value));
+
+    processor->programm_cnt = (size_t)last_value - 1;
+
+    CHECK_AND_RETURN_ERRORS_PROC(do_jmp(processor));
 
     return PROC_SUCCESS;
 }

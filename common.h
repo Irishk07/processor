@@ -31,8 +31,10 @@ enum code_comand {
     CMD_JAE   = 16, // >=
     CMD_JE    = 17, // ==
     CMD_JNE   = 18, // !=
-    CMD_POPR  = 42,
-    CMD_PUSHR = 33
+    CMD_CALL  = 19,
+    CMD_RET   = 20,
+    CMD_PUSHR = 33,
+    CMD_POPR  = 42
 };
 
 

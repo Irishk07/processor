@@ -14,16 +14,17 @@
 
 // TODO function
 #define CHECK_LABEL(string)                                                     \
-    if (!strncmp(string, ":", 1)) {                                             \
+    if (*string == ':') {                                                       \
         int number = 0;                                                         \
                                                                                 \
         if (sscanf(string, "%*c%d", &number) == 1) {                            \
-            assembler->labels[number] = (type_t)assembler->byte_code_data.size; \
+            assembler->labels[number] = (number_of_compile == FIRST_COMPILE) ?  \
+                                        (type_t)assembler->cnt_commands : (type_t)assembler->byte_code_data.size; \
             break;                                                              \
         }                                                                       \
                                                                                 \
         else {                                                                  \
-            return ASM_NOT_FOUND_LABEL;                                           \
+            return ASM_NOT_FOUND_LABEL;                                         \
         }                                                                       \
     }
 

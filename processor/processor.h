@@ -41,6 +41,7 @@ enum processor_status {
 
 struct Processor {
     stack_t stack;
+    stack_t return_stack;
     size_t programm_cnt = 0;
     size_t cnt_commands = 0;
     type_t registers[CNT_REGISTERS]; // RAX RBX RCX RDX REX RFX RGX RHX
@@ -83,6 +84,10 @@ processor_status do_pushr(Processor* processor);
 processor_status do_out(Processor* processor);
 
 processor_status do_jmp(Processor* processor);
+
+processor_status do_call(Processor* processor);
+
+processor_status do_ret(Processor* processor);
 
 
 #endif //PROCESSOR_H_
