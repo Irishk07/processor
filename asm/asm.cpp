@@ -17,6 +17,7 @@ void AsmInitInfoAboutCommands(Assembler* assembler) {
         assembler->about_commands[i] = {};
     }
 
+    // FIXME
     assembler->about_commands[CMD_PUSH]  = {.command_name = "PUSH",  .command_code = CMD_PUSH,  .code_of_type_argument = NUM_ARGUMENT};
     assembler->about_commands[CMD_POP]   = {.command_name = "POP",   .command_code = CMD_POP,   .code_of_type_argument = NO_ARGUMENT};
     assembler->about_commands[CMD_ADD]   = {.command_name = "ADD",   .command_code = CMD_ADD,   .code_of_type_argument = NO_ARGUMENT};
@@ -35,10 +36,12 @@ void AsmInitInfoAboutCommands(Assembler* assembler) {
     assembler->about_commands[CMD_JAE]   = {.command_name = "JAE",   .command_code = CMD_JAE,   .code_of_type_argument = LABEL_ARGUMENT};
     assembler->about_commands[CMD_JE]    = {.command_name = "JE",    .command_code = CMD_JE,    .code_of_type_argument = LABEL_ARGUMENT};
     assembler->about_commands[CMD_JNE]   = {.command_name = "JNE",   .command_code = CMD_JNE,   .code_of_type_argument = LABEL_ARGUMENT};
-    assembler->about_commands[CMD_PUSHR] = {.command_name = "PUSHR", .command_code = CMD_PUSHR, .code_of_type_argument = REG_ARGUMENT};
     assembler->about_commands[CMD_CALL]  = {.command_name = "CALL",  .command_code = CMD_CALL,  .code_of_type_argument = LABEL_ARGUMENT};
     assembler->about_commands[CMD_RET]   = {.command_name = "RET",   .command_code = CMD_RET,   .code_of_type_argument = NO_ARGUMENT};
+    assembler->about_commands[CMD_PUSHR] = {.command_name = "PUSHR", .command_code = CMD_PUSHR, .code_of_type_argument = REG_ARGUMENT};
     assembler->about_commands[CMD_POPR]  = {.command_name = "POPR",  .command_code = CMD_POPR,  .code_of_type_argument = REG_ARGUMENT};
+    assembler->about_commands[CMD_PUSHM] = {.command_name = "PUSHM", .command_code = CMD_PUSHM, .code_of_type_argument = RAM_REG_ARGUMENT};
+    assembler->about_commands[CMD_POPM]  = {.command_name = "POPM",  .command_code = CMD_POPM,  .code_of_type_argument = RAM_REG_ARGUMENT};
 }
 
 void AsmInitLabels(Assembler* assembler) {
@@ -130,18 +133,26 @@ assembler_status GetFillArgNum(Assembler* assembler, char* string, int number_of
     return ASM_SUCCESS;
 }
 
-status_cmp CheckRegister(Assembler* assembler, char* string) {
-    for (int i = 0; i < CNT_REGISTERS; ++i) {
-        if (!strcmp(assembler->name_registers[i], string)) return EQUAL;
+status_cmp CheckRegister(Assembler* assembler, char* string, int type_argument) {
+    if (type_argument == REG_ARGUMENT) {
+        for (int i = 0; i < CNT_REGISTERS; ++i) {
+            if (!strcmp(assembler->name_registers[i], string)) return EQUAL;
+        }
+    }
+
+    if (type_argument == RAM_REG_ARGUMENT) {
+        for (int i = 0; i < CNT_REGISTERS; ++i) { // +2 because argument has [ ]
+            if (!strcmp(assembler->name_ram_registers[i], string)) return EQUAL;
+        }
     }
 
     return DIFFERENT;
 }
 
-assembler_status GetFillArgReg(Assembler* assembler, char* string, int number_of_compile) {
+assembler_status GetFillArgReg(Assembler* assembler, char* string, int number_of_compile, int type_argument) {
     CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
 
-    if (!CheckRegister(assembler, string)) {
+    if (!CheckRegister(assembler, string, type_argument)) {
         return ASM_EXPECTS_REGISTER;
     }
 
@@ -150,7 +161,11 @@ assembler_status GetFillArgReg(Assembler* assembler, char* string, int number_of
         return ASM_SUCCESS;
     }
 
-    type_t code_reg = string[1] - 'A';
+    type_t code_reg = 0;
+    // if argument is reg, we are get first index (middle element)
+    // if argument is arm_reg, we are get second index (middle element, we also have [ ])
+    (type_argument == REG_ARGUMENT) ? code_reg = string[1] - 'A' : code_reg = string[2] - 'A';
+
     assembler->byte_code_data.data[assembler->byte_code_data.size] = code_reg;
     assembler->byte_code_data.size++;
 
@@ -222,6 +237,10 @@ assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
     for (int i = 0; i < assembler->about_text.cnt_strok; ++i) {
         int index = 0;
 
+        if (!strcmp(assembler->about_text.pointer_on_text[i], "\0")) {
+            continue;
+        }
+
         for( ; index < MAX_CNT_COMMANDS; ++index) {
             CHECK_LABEL(assembler->about_text.pointer_on_text[i]);
             
@@ -230,12 +249,14 @@ assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
                 if (assembler->about_commands[index].code_of_type_argument == NUM_ARGUMENT)   
                     CHECK_AND_RETURN_ERRORS_ASM(GetFillArgNum(assembler, assembler->about_text.pointer_on_text[++i], number_of_compile));
                     
-                if (assembler->about_commands[index].code_of_type_argument == REG_ARGUMENT)   
-                    CHECK_AND_RETURN_ERRORS_ASM(GetFillArgReg(assembler, assembler->about_text.pointer_on_text[++i], number_of_compile));
+                if (assembler->about_commands[index].code_of_type_argument == REG_ARGUMENT ||
+                    assembler->about_commands[index].code_of_type_argument == RAM_REG_ARGUMENT)   
+                    CHECK_AND_RETURN_ERRORS_ASM(GetFillArgReg(assembler, assembler->about_text.pointer_on_text[++i], 
+                                                              number_of_compile, assembler->about_commands[index].code_of_type_argument));
 
                 if (assembler->about_commands[index].code_of_type_argument == LABEL_ARGUMENT)
                     CHECK_AND_RETURN_ERRORS_ASM(GetFillArgJump(assembler, assembler->about_text.pointer_on_text[++i], number_of_compile));
-
+                
                 break;
             }
         }
@@ -245,9 +266,9 @@ assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
         }
     }
 
-    if (number_of_compile == SECOND_COMPILE && assembler->byte_code_data.data[assembler->byte_code_data.size - 1] != CMD_HLT) { // FIXME empty lines
-        CHECK_AND_RETURN_ERRORS_ASM(ASM_EXPECTS_HLT);
-    }
+    // if (number_of_compile == SECOND_COMPILE && assembler->byte_code_data.data[assembler->byte_code_data.size - 1] != CMD_HLT) { // FIXME empty lines
+    //     CHECK_AND_RETURN_ERRORS_ASM(ASM_EXPECTS_HLT);
+    // }
     
     PrintfByteCode(assembler, number_of_compile);
 

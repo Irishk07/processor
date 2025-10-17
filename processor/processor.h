@@ -19,6 +19,8 @@
         }
 
 
+const int SIZE_RAM = 100;
+
 enum processor_status {
     PROC_SUCCESS                  = 0,
     PROC_UNKNOWN_COMAND           = 1 << 0,
@@ -35,7 +37,8 @@ enum processor_status {
     PROC_NULL_POINTER_ON_STRUCT   = 1 << 11,
     PROC_CNT_COMMANDS_IS_NEGATIVE = 1 << 12,
     PROC_WRONG_BYTE_CODE          = 1 << 13,
-    PROC_INVALID_REGISTER         = 1 << 14
+    PROC_INVALID_REGISTER         = 1 << 14,
+    PROC_EXPECTS_ARG              = 1 << 15
 };
 
 
@@ -46,6 +49,7 @@ struct Processor {
     size_t cnt_commands = 0;
     type_t registers[CNT_REGISTERS]; // RAX RBX RCX RDX REX RFX RGX RHX
     About_text about_text;
+    int ram[SIZE_RAM] = {};
 };
 
 
@@ -88,6 +92,10 @@ processor_status do_jmp(Processor* processor);
 processor_status do_call(Processor* processor);
 
 processor_status do_ret(Processor* processor);
+
+processor_status do_pushm(Processor* processor);
+
+processor_status do_popm(Processor* processor);
 
 
 #endif //PROCESSOR_H_

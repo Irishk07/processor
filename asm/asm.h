@@ -68,10 +68,11 @@ struct Byte_code_data {
 };
 
 enum type_arguments {
-    NO_ARGUMENT    = 0,
-    NUM_ARGUMENT   = 1,
-    REG_ARGUMENT   = 2,
-    LABEL_ARGUMENT = 3
+    NO_ARGUMENT      = 0,
+    NUM_ARGUMENT     = 1,
+    REG_ARGUMENT     = 2,
+    LABEL_ARGUMENT   = 3,
+    RAM_REG_ARGUMENT = 4
 };
 
 struct About_commands {
@@ -86,7 +87,8 @@ struct Assembler {
     type_t labels[CNT_LABELS];
     About_commands about_commands[MAX_CNT_COMMANDS];
     int cnt_commands;
-    const char* name_registers[CNT_REGISTERS] = {"RAX", "RBX", "RCX", "RDX", "REX", "RFX", "RGX", "RHX"};
+    const char* name_registers[CNT_REGISTERS]     = {"RAX", "RBX", "RCX", "RDX", "REX", "RFX", "RGX", "RHX"};
+    const char* name_ram_registers[CNT_REGISTERS] = {"[RAX]", "[RBX]", "[RCX]", "[RDX]", "[REX]", "[RFX]", "[RGX]", "[RHX]"};
 };
 
 
@@ -102,9 +104,9 @@ status_cmp FillCommand(Assembler* assembler, char* command, int index, int numbe
 
 assembler_status GetFillArgNum(Assembler* assembler, char* string, int number_of_compile);
 
-status_cmp CheckRegister(Assembler* assembler, char* string);
+status_cmp CheckRegister(Assembler* assembler, char* string, int type_argument);
 
-assembler_status GetFillArgReg(Assembler* assembler, char* string, int number_of_compile);
+assembler_status GetFillArgReg(Assembler* assembler, char* string, int number_of_compile, int type_argument);
 
 assembler_status GetFillArgJump(Assembler* assembler, char* string, int number_of_compile);
 
