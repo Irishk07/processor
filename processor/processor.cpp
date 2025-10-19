@@ -81,7 +81,7 @@ processor_status SPU(Processor* processor) {
 
     type_t command = 0;
 
-    while (true) {
+    while (processor->programm_cnt != processor->cnt_commands) {
         if (sscanf(processor->about_text.pointer_on_text[processor->programm_cnt], TYPE_T_PRINTF_SPECIFIER, &command) != 1) {
             CHECK_AND_RETURN_ERRORS_PROC(PROC_WRONG_BYTE_CODE);
         }
@@ -119,6 +119,10 @@ processor_status SPU(Processor* processor) {
         }
 
         processor->programm_cnt++;
+    }
+
+    if (processor->programm_cnt == processor->cnt_commands) {
+        CHECK_AND_RETURN_ERRORS_PROC(PROC_EXPECTS_HLT);
     }
 
     CHECK_AND_RETURN_ERRORS_PROC(ProcVerify(processor));

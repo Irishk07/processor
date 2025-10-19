@@ -38,7 +38,8 @@ enum processor_status {
     PROC_CNT_COMMANDS_IS_NEGATIVE = 1 << 12,
     PROC_WRONG_BYTE_CODE          = 1 << 13,
     PROC_INVALID_REGISTER         = 1 << 14,
-    PROC_EXPECTS_ARG              = 1 << 15
+    PROC_EXPECTS_ARG              = 1 << 15,
+    PROC_EXPECTS_HLT              = 1 << 16
 };
 
 
