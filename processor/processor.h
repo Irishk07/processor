@@ -97,5 +97,7 @@ processor_status do_pushm(Processor* processor);
 
 processor_status do_popm(Processor* processor);
 
+void draw_ram(Processor* processor);
+
 
 #endif //PROCESSOR_H_

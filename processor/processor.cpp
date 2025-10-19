@@ -29,7 +29,7 @@ processor_status ProcCtor(Processor* processor, const char* name_byte_code_file)
 
     CHECK_AND_RETURN_ERRORS_PROC(OneginReadFile(processor));
 
-    CHECK_AND_RETURN_ERRORS_PROC(DivisionIntoCommands(processor)); // FIXME rename
+    CHECK_AND_RETURN_ERRORS_PROC(DivisionIntoCommands(processor));
 
     CHECK_AND_RETURN_ERRORS_PROC(ProcVerify(processor));
 
@@ -293,6 +293,8 @@ processor_status do_in(Processor* processor) {
     
     type_t num  = 0;
 
+    printf("Enter tne number please:\n");
+
     if (scanf(TYPE_T_PRINTF_SPECIFIER, &num) != 1) {
         return PROC_EXPECTS_ARG;
     }
@@ -390,7 +392,7 @@ processor_status do_ret(Processor* processor) {
     type_t last_value = 0;
     CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->return_stack, &last_value));
 
-    processor->programm_cnt = (size_t)last_value - 1;
+    processor->programm_cnt = (size_t)last_value - 1; // -1 because after this function in spu processor->programm_cnt++
 
     return PROC_SUCCESS;
 }
@@ -426,6 +428,16 @@ processor_status do_popm(Processor* processor) {
     processor->ram[processor->registers[reg]] = (int)num;
 
     return PROC_SUCCESS;
+}
+
+void draw_ram(Processor* processor) {
+    assert(processor);
+
+    for (int i = 0; i < SIZE_RAM; ++i) {
+        if (i % 10 == 0) 
+            printf ("\n");
+        printf("%d ", processor->ram[i]);
+    }
 }
 
 
