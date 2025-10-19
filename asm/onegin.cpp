@@ -54,6 +54,10 @@ assembler_status OneginReadFile(Assembler* assembler) {
     char* temp_text = assembler->about_text.text;
 
     for ( ; *temp_text != '\0'; ++temp_text) {
+        if (*temp_text == '/') {
+            while(*temp_text != '\n') temp_text++;
+        }
+    
         if (*temp_text == '\n' || *temp_text == ' ') {
             assembler->about_text.cnt_strok++;
         }
@@ -82,6 +86,11 @@ assembler_status DivisionIntoCommands(Assembler* assembler) {
     assembler->about_text.pointer_on_text[0] = temp_text;
 
     for (int i = 1; i < assembler->about_text.cnt_strok && *temp_text != '\0'; ) {
+        if (*temp_text == '/') {
+            *temp_text = '\0';
+            while(*temp_text != '\n') temp_text++;
+        }
+
         if (*temp_text == '\n' || *temp_text == ' ') {
             *temp_text = '\0';
 
