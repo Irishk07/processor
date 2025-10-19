@@ -106,7 +106,7 @@ type_error_t StackReSize(stack_t* stack, size_t old_capacity) {
 
     if (stack->capacity > old_capacity) {
         
-        init_with_poisons(stack->data + OffsetToLastElement(stack->size, CNT_CANARIES), stack->capacity - stack->size);
+        init_with_poisons(stack->data + OffsetToNewElement(stack->size, CNT_CANARIES), stack->capacity - stack->size);
 
         // ON_DEBUG(fprintf(stderr, "MEOW I'm recalloc up, I do it, size %zu, capacity %zu\n", stack->size, stack->capacity));
     }
