@@ -20,6 +20,7 @@
 
 
 const int SIZE_RAM = 100;
+const int MAX_CNT_COMMANDS = 64;
 
 enum processor_status {
     PROC_SUCCESS                  = 0,
@@ -53,10 +54,16 @@ struct Processor {
     int ram[SIZE_RAM] = {};
 };
 
+struct About_commands {
+    const char* command_name;
+    processor_status (*function) (Processor* processor);
+};
+
+void InitAboutCommands(About_commands* about_commands);
 
 processor_status ProcCtor(Processor* processor, const char* file_name);
 
-processor_status SPU(Processor* processor);
+processor_status SPU(Processor* processor, About_commands* about_commands);
 
 processor_status ProcVerify(const Processor* processor);
 
@@ -89,6 +96,18 @@ processor_status do_pushr(Processor* processor);
 processor_status do_out(Processor* processor);
 
 processor_status do_jmp(Processor* processor);
+
+processor_status do_jb(Processor* processor);
+
+processor_status do_jbe(Processor* processor);
+
+processor_status do_ja(Processor* processor);
+
+processor_status do_jae(Processor* processor);
+
+processor_status do_je(Processor* processor);
+
+processor_status do_jne(Processor* processor);
 
 processor_status do_call(Processor* processor);
 
