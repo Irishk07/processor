@@ -56,7 +56,7 @@ status_cmp FindCommand(Assembler* assembler, char* string, About_commands* curre
     assert(string);
     assert(current_command);
 
-    for(int i = 0; i < MAX_CNT_COMMANDS; ++i) {
+    for(size_t i = 0; i < sizeof(about_commands) / sizeof(about_commands[0]); ++i) {
         if(!strcmp(about_commands[i].command_name, (const char*)string)) {
             *current_command = about_commands[i];
             return EQUAL;
@@ -109,7 +109,7 @@ status_cmp CheckRegister(Assembler* assembler, char* string, int type_argument) 
             if (type_argument == REG_ARGUMENT && strlen(string) == LEN_NAME_REGISTER)
                 return EQUAL;
 
-            if (type_argument == RAM_REG_ARGUMENT && strlen(string) == LEN_NAME_REGISTER + 1 //+1 because nam has ']' at the end
+            if (type_argument == RAM_REG_ARGUMENT && strlen(string) == LEN_NAME_REGISTER + 1 //+1 because name has ']' at the end
                                                   && string[LEN_NAME_REGISTER] == ']') 
                 return EQUAL;
         }
@@ -149,7 +149,7 @@ assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_co
         return ASM_SUCCESS;
     }
 
-    if (*string != ':') {   
+    if (*string != ':') { 
         return ASM_EXPECTS_JUMP_ARG;
     }
 
@@ -171,6 +171,7 @@ assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_co
         return ASM_SUCCESS;
     }
 
+    fprintf(stderr, "Arg %s\n\n", string);
     return ASM_EXPECTS_JUMP_ARG;
 }
 
@@ -306,6 +307,9 @@ assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
 
     return ASM_SUCCESS;
 }
+
+#undef OPEN_LISTING_FILE
+#undef CLOSE_LISTING_FILE
 
 assembler_status CreatByteCodeData(Assembler* assembler) {
     assert(assembler);

@@ -75,8 +75,6 @@ processor_status ProcVerify(const Processor* processor) {
     }
 
 processor_status SPU(Processor* processor) {
-    // assert(processor->about_text.text);
-
     CHECK_AND_RETURN_ERRORS_PROC(ProcVerify(processor));
 
     type_t command = 0;
@@ -431,6 +429,8 @@ processor_status do_popm(Processor* processor) {
 
     processor->ram[processor->registers[reg]] = (int)num;
 
+    draw_ram(processor);
+
     return PROC_SUCCESS;
 }
 
@@ -440,8 +440,14 @@ void draw_ram(Processor* processor) {
     for (int i = 0; i < SIZE_RAM; ++i) {
         if (i % 10 == 0) 
             printf ("\n");
-        printf("%d ", processor->ram[i]);
+
+        if (processor->ram[i] == 1)
+            printf("%c ", '*');
+        else
+            printf("%c ", '.');
     }
+
+    printf("\n");
 }
 
 
