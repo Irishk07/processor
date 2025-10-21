@@ -171,7 +171,6 @@ assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_co
         return ASM_SUCCESS;
     }
 
-    fprintf(stderr, "Arg %s\n\n", string);
     return ASM_EXPECTS_JUMP_ARG;
 }
 
@@ -179,7 +178,7 @@ assembler_status CheckLabel(Assembler* assembler, char* string) {
     assert(string);
 
     if (*string == ':') {                                                       
-        int number = 0;                                                         
+        int number = 0;                                                        
                                                                                 
         if (sscanf(string, "%*c%d", &number) != 1) {                            
             return ASM_NOT_FOUND_LABEL;                                          

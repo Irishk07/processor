@@ -19,7 +19,7 @@ void InitAboutCommands(About_commands* about_commands) {
     about_commands[CMD_POP]   = {.command_name = "POP",   &do_pop};
     about_commands[CMD_ADD]   = {.command_name = "ADD",   &do_add};
     about_commands[CMD_SUB]   = {.command_name = "SUB",   &do_sub};
-    about_commands[CMD_DIV]   = {.command_name = "DIV",   &do_div};    
+    about_commands[CMD_DIV]   = {.command_name = "DIV",   &do_div};
     about_commands[CMD_MUL]   = {.command_name = "MUL",   &do_mul};
     about_commands[CMD_SQRT]  = {.command_name = "SQRT",  &do_sqrt};
     about_commands[CMD_POW]   = {.command_name = "POW",   &do_pow};
@@ -91,7 +91,6 @@ processor_status SPU(Processor* processor, About_commands* about_commands) {
             break;
         }
 
-        
         about_commands[command].function(processor);
 
         processor->programm_cnt++;
@@ -134,7 +133,7 @@ processor_status ProcDtor(Processor* processor) {
 
     StackDtor(&processor->stack);
     StackDtor(&processor->return_stack);
-    
+
     free(processor->about_text.text);
     free(processor->about_text.pointer_on_text);
 
@@ -154,7 +153,7 @@ processor_status do_push(Processor* processor) {
     if (sscanf(processor->about_text.pointer_on_text[processor->programm_cnt], TYPE_T_PRINTF_SPECIFIER, &num) != 1) {
         return PROC_EXPECTS_ARG;
     }
-        
+
     CHECK_AND_RETURN_ERRORS_STACK(StackPush(&processor->stack, num));
 
     return PROC_SUCCESS;
@@ -162,7 +161,7 @@ processor_status do_push(Processor* processor) {
 
 processor_status do_pop(Processor* processor) {
     assert(processor);
-    
+
     type_t deleted_value = 0;
 
     CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &deleted_value));
@@ -260,7 +259,7 @@ processor_status do_pow(Processor* processor) {
 
 processor_status do_in(Processor* processor) {
     assert(processor);
-    
+
     type_t num  = 0;
 
     printf("Enter tne number please:\n");
@@ -311,7 +310,7 @@ processor_status do_pushr(Processor* processor) {
     if (code_reg < 0 || code_reg >= CNT_REGISTERS) {
         CHECK_AND_RETURN_ERRORS_PROC(PROC_INVALID_REGISTER);
     }
-    
+
     CHECK_AND_RETURN_ERRORS_STACK(StackPush(&processor->stack, processor->registers[code_reg]));
 
     return PROC_SUCCESS;
@@ -346,107 +345,33 @@ processor_status do_jmp(Processor* processor) {
     return PROC_SUCCESS;
 }
 
-processor_status do_jb(Processor* processor) {
-    type_t first_num  = 0;                                                   
-    type_t second_num = 0;       
-                                                
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &first_num));  
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &second_num)); 
-
-    if (second_num < first_num) {                                         
-        CHECK_AND_RETURN_ERRORS_PROC(do_jmp(processor));                     
-    }                                                                        
-    else {
-        processor->programm_cnt++;
-    }    
-    
-    return PROC_SUCCESS;
+#define DO_JUMP_CONDITION(name, sign)                                       \
+                                                                            \
+processor_status do_ ## name(Processor* processor) {                        \
+    type_t first_num  = 0;                                                  \
+    type_t second_num = 0;                                                  \
+                                                                            \
+    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &first_num)); \
+    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &second_num));\
+                                                                            \
+    if (second_num sign first_num) {                                        \
+        CHECK_AND_RETURN_ERRORS_PROC(do_jmp(processor));                    \
+    }                                                                       \
+    else {                                                                  \
+        processor->programm_cnt++;                                          \
+    }                                                                       \
+                                                                            \
+    return PROC_SUCCESS;                                                    \
 }
 
-processor_status do_jbe(Processor* processor) {
-    type_t first_num  = 0;                                                   
-    type_t second_num = 0;       
-                                                
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &first_num));  
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &second_num)); 
+DO_JUMP_CONDITION(ja,  >)
+DO_JUMP_CONDITION(jae, >=)
+DO_JUMP_CONDITION(jb,  <)
+DO_JUMP_CONDITION(jbe, <=)
+DO_JUMP_CONDITION(je,  ==)
+DO_JUMP_CONDITION(jne, !=)
 
-    if (second_num <= first_num) {                                         
-        CHECK_AND_RETURN_ERRORS_PROC(do_jmp(processor));                     
-    }                                                                        
-    else {
-        processor->programm_cnt++;
-    }    
-    
-    return PROC_SUCCESS;
-}
-
-processor_status do_ja(Processor* processor) {
-    type_t first_num  = 0;                                                   
-    type_t second_num = 0;       
-                                                
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &first_num));  
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &second_num)); 
-
-    if (second_num > first_num) {                                         
-        CHECK_AND_RETURN_ERRORS_PROC(do_jmp(processor));                     
-    }                                                                        
-    else {
-        processor->programm_cnt++;
-    }    
-    
-    return PROC_SUCCESS;
-}
-
-processor_status do_jae(Processor* processor) {
-    type_t first_num  = 0;                                                   
-    type_t second_num = 0;       
-                                                
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &first_num));  
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &second_num)); 
-
-    if (second_num >= first_num) {                                         
-        CHECK_AND_RETURN_ERRORS_PROC(do_jmp(processor));                     
-    }                                                                        
-    else {
-        processor->programm_cnt++;
-    }    
-    
-    return PROC_SUCCESS;
-}
-
-processor_status do_je(Processor* processor) {
-    type_t first_num  = 0;                                                   
-    type_t second_num = 0;       
-                                                
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &first_num));  
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &second_num)); 
-
-    if (second_num == first_num) {                                         
-        CHECK_AND_RETURN_ERRORS_PROC(do_jmp(processor));                     
-    }                                                                        
-    else {
-        processor->programm_cnt++;
-    }    
-    
-    return PROC_SUCCESS;
-}
-
-processor_status do_jne(Processor* processor) {
-    type_t first_num  = 0;                                                   
-    type_t second_num = 0;       
-                                                
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &first_num));  
-    CHECK_AND_RETURN_ERRORS_STACK(StackPop(&processor->stack, &second_num)); 
-
-    if (second_num != first_num) {                                         
-        CHECK_AND_RETURN_ERRORS_PROC(do_jmp(processor));                     
-    }                                                                        
-    else {
-        processor->programm_cnt++;
-    }    
-    
-    return PROC_SUCCESS;
-}
+#undef DO_JUMP_CONDITION
 
 processor_status do_call(Processor* processor) {
     assert(processor);
@@ -508,7 +433,7 @@ void draw_ram(Processor* processor) {
     assert(processor);
 
     for (int i = 0; i < SIZE_RAM; ++i) {
-        if (i % 10 == 0) 
+        if (i % 10 == 0)
             printf ("\n");
 
         if (processor->ram[i] == 1)
