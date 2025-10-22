@@ -1,77 +1,77 @@
 IN
-POPR RAX / a
+POPR RAX            / a
 
 IN
-POPR RBX / b
+POPR RBX            / b
 
 IN
-POPR RCX / c
+POPR RCX            / c
 
 PUSHR RAX
 PUSH 0
-JE :1
+JE :zero_a
 PUSHR RBX
 PUSHR RBX
-MUL / b^2
+MUL                 / b^2
 PUSHR RAX
 PUSHR RCX
 MUL
 PUSH 4
-MUL / 4ac
-SUB / b^2 - 4ac
+MUL                 / 4ac
+SUB                 / b^2 - 4ac
 POPR RDX
 PUSHR RDX
 PUSH 0
-JAE :5
-PUSH -1 / D < 0
-JMP :4
+JAE :d_not_before_zero
+PUSH -1             / D < 0
+JMP :out
 
-:5 / D >= 0
+:d_not_before_zero  / D >= 0
 PUSHR RDX
 SQRT
 POPR RDX
 PUSHR RDX
 PUSH 0
-JE :6
-PUSH 2 / D != 0
+JE :d_equal_zero
+PUSH 2              / D != 0
 OUT
 PUSHR RBX
 PUSH -1
-MUL / -b
+MUL                 / -b
 PUSHR RDX
-ADD / -b + sqrt(D)
+ADD                 / -b + sqrt(D)
 PUSHR RAX
 PUSH 2
-MUL / 2a
-DIV / -b + sqrt(D) : 2a
+MUL                 / 2a
+DIV                 / -b + sqrt(D) : 2a
 OUT
 PUSHR RBX
 PUSH -1
-MUL / -b
+MUL                 / -b
 PUSHR RDX
-SUB / -b - sqrt(D)
+SUB                 / -b - sqrt(D)
 PUSHR RAX
 PUSH 2
-MUL / 2a
-DIV / -b - sqrt(D) : 2a
-JMP :4
+MUL                 / 2a
+DIV                 / -b - sqrt(D) : 2a
+JMP :out
 
-:6 / D = 0
+:d_equal_zero       / D = 0
 PUSHR RBX
 PUSH -1
-MUL / -b
+MUL                 / -b
 PUSHR RAX
 PUSH 2
-MUL / 2a
-DIV / -b : 2a
+MUL                 / 2a
+DIV                 / -b : 2a
 PUSH 1
 OUT
-JMP :4
+JMP :out
 
-:1 / a = 0, b != 0
+:zero_a             / a = 0, b != 0
 PUSHR RBX
 PUSH 0
-JE :2
+JE :zero_a_b
 PUSHR RCX
 PUSHR RBX
 DIV
@@ -79,19 +79,19 @@ PUSH -1
 MUL
 PUSH 1
 OUT
-JMP :4
+JMP :out
 
-:2 / a = 0, b = 0, c != 0
+:zero_a_b           / a = 0, b = 0, c != 0
 PUSHR RCX
 PUSH 0
-JE :3
+JE :zero_a_b_c
 PUSH 0
-JMP :4
+JMP :out
 
-:3 / a = 0, b = 0, c = 0
+:zero_a_b_c         / a = 0, b = 0, c = 0
 PUSH 3
-JMP :4
+JMP :out
 
-:4
+:out
 OUT
 HLT

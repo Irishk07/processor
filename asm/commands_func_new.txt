@@ -2,20 +2,20 @@ IN
 
 POPR RAX
 
-CALL :1
+CALL :function
 OUT
 HLT
 
-:1
+:function
 PUSH 1
 PUSHR RAX
-JE :2
+JE :out
 
 PUSHR RAX
 PUSH 1
 SUB
 POPR RAX
-CALL :1
+CALL :function
 PUSHR RAX
 PUSH 1
 ADD
@@ -24,6 +24,6 @@ PUSHR RAX
 MUL
 RET
 
-:2
+:out
 PUSH 1
 RET

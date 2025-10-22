@@ -1,70 +1,70 @@
-IN / enter R
-POPR RCX / R
+IN                              / enter R
+POPR RCX                        / R
 
-IN / enter coord x of center 
-POPR RDX / center: x
+IN                              / enter coord x of center 
+POPR RDX                        / center: x
 
-IN / enter coord y of center 
-POPR REX / center: y
+IN                              / enter coord y of center 
+POPR REX                        / center: y
 
 PUSH 0
-POPR RAX / coord: a
+POPR RAX                        / coord: a
 PUSH 0
-POPR RBX / coord: b
+POPR RBX                        / coord: b
 
-:1
+:check_circle_inequality
 PUSHR RAX
 PUSHR RDX
 SUB
 PUSH 2
-POW / (a - x)^2
+POW                             / (a - x)^2
 PUSHR RBX
 PUSHR REX
 SUB
 PUSH 2
-POW / (b - y)^2
-ADD / (a - x)^2 + (b - y)^2
+POW                             / (b - y)^2
+ADD                             / (a - x)^2 + (b - y)^2
 PUSHR RCX
 PUSHR RCX
-MUL / R^2
+MUL                             / R^2
 
-JBE :2 / if (a - x)^2 + (b - y)^2 <= R^2
+JBE :in_circle                  / if (a - x)^2 + (b - y)^2 <= R^2
 PUSHR RAX
 PUSH 0
-:5
+:count_ram_index
 PUSHR RAX
 PUSH 10
 MUL
 PUSHR RBX
 ADD
-POPR RAX / in rax now index in ram
+POPR RAX                        / in rax now index in ram
 POPM [RAX]
-POPR RAX / in RAX old value
-JMP :3
+POPR RAX                        / in RAX old value
+JMP :next_pass
 
-:2
-PUSHR RAX / save value of RAX in stack for several time
+:in_circle
+PUSHR RAX                       / save value of RAX in stack for several time
 PUSH 1
-JMP :5
+JMP :count_ram_index
 
-:3
+:next_pass
 PUSHR RBX
 PUSH 1
 ADD
-POPR RBX / b += 1
+POPR RBX                        / b += 1
 PUSHR RBX
 PUSH 10
-JB :1 / if b < 10
-PUSH 0 / if b >= 10: b = 0
+JB :check_circle_inequality     / if b < 10
+PUSH 0                          / if b >= 10: b = 0
 POPR RBX
 PUSHR RAX
 PUSH 1
 ADD
-POPR RAX / a += 1
+POPR RAX                        / a += 1
 PUSHR RAX
 PUSH 10
-JAE :4 / if a >= 10
-JMP :1
+JAE :out                        / if a >= 10
+JMP :check_circle_inequality
 
-:4
+:out
 HLT
