@@ -60,43 +60,75 @@ enum type_arguments {
 
 struct About_commands {
     const char* command_name;
+    unsigned long command_hash;
     type_t command_code;
     int code_of_type_argument;
     type_t argument;
 };
 
+struct About_labels {
+    unsigned long hash;
+    type_t index;
+};
+
+struct About_register {
+    const char* register_name;
+    unsigned long register_hash;
+};
+
 struct Assembler {
     Byte_code_data byte_code_data;
     About_text about_text;
-    type_t labels[CNT_LABELS];
-    const char* const name_registers[CNT_REGISTERS] = {"RAX", "RBX", "RCX", "RDX", "REX", "RFX", "RGX", "RHX"};
+    About_labels about_labels[CNT_LABELS];
+    int cnt_current_label;
 };
 
+unsigned long hash_djb2(const char *str);
+
 const About_commands about_commands [] = {
-    {.command_name = "PUSH",  .command_code = CMD_PUSH,  .code_of_type_argument = NUM_ARGUMENT,     .argument = 0},
-    {.command_name = "POP",   .command_code = CMD_POP,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "ADD",   .command_code = CMD_ADD,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "SUB",   .command_code = CMD_SUB,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "DIV",   .command_code = CMD_DIV,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "MUL",   .command_code = CMD_MUL,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "SQRT",  .command_code = CMD_SQRT,  .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "POW",   .command_code = CMD_POW,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "IN",    .command_code = CMD_IN,    .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "OUT",   .command_code = CMD_OUT,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "HLT",   .command_code = CMD_HLT,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "JMP",   .command_code = CMD_JMP,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JB",    .command_code = CMD_JB,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JBE",   .command_code = CMD_JBE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JA",    .command_code = CMD_JA,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JAE",   .command_code = CMD_JAE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JE",    .command_code = CMD_JE,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JNE",   .command_code = CMD_JNE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "CALL",  .command_code = CMD_CALL,  .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "RET",   .command_code = CMD_RET,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "PUSHR", .command_code = CMD_PUSHR, .code_of_type_argument = REG_ARGUMENT,     .argument = 0},
-    {.command_name = "POPR",  .command_code = CMD_POPR,  .code_of_type_argument = REG_ARGUMENT,     .argument = 0},
-    {.command_name = "PUSHM", .command_code = CMD_PUSHM, .code_of_type_argument = RAM_REG_ARGUMENT, .argument = 0},
-    {.command_name = "POPM",  .command_code = CMD_POPM,  .code_of_type_argument = RAM_REG_ARGUMENT, .argument = 0}
+    {.command_name = "PUSH", .command_hash = hash_djb2((const char*)"PUSH"),  .command_code = CMD_PUSH,  .code_of_type_argument = NUM_ARGUMENT,     .argument = 0},
+    {.command_name = "POP",  .command_hash = hash_djb2((const char*)"POP"),   .command_code = CMD_POP,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "ADD",  .command_hash = hash_djb2((const char*)"ADD"),   .command_code = CMD_ADD,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "SUB",  .command_hash = hash_djb2((const char*)"SUB"),   .command_code = CMD_SUB,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "DIV",  .command_hash = hash_djb2((const char*)"DIV"),   .command_code = CMD_DIV,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "MUL",  .command_hash = hash_djb2((const char*)"MUL"),   .command_code = CMD_MUL,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "SQRT", .command_hash = hash_djb2((const char*)"SQRT"),  .command_code = CMD_SQRT,  .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "POW",  .command_hash = hash_djb2((const char*)"POW"),   .command_code = CMD_POW,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "IN",   .command_hash = hash_djb2((const char*)"IN"),    .command_code = CMD_IN,    .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "OUT",  .command_hash = hash_djb2((const char*)"OUT"),   .command_code = CMD_OUT,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "HLT",  .command_hash = hash_djb2((const char*)"HLT"),   .command_code = CMD_HLT,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "JMP",  .command_hash = hash_djb2((const char*)"JMP"),   .command_code = CMD_JMP,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "JB",   .command_hash = hash_djb2((const char*)"JB"),    .command_code = CMD_JB,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "JBE",  .command_hash = hash_djb2((const char*)"JBE"),   .command_code = CMD_JBE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "JA",   .command_hash = hash_djb2((const char*)"JA"),    .command_code = CMD_JA,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "JAE",  .command_hash = hash_djb2((const char*)"JAE"),   .command_code = CMD_JAE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "JE",   .command_hash = hash_djb2((const char*)"JE"),    .command_code = CMD_JE,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "JNE",  .command_hash = hash_djb2((const char*)"JNE"),   .command_code = CMD_JNE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "CALL", .command_hash = hash_djb2((const char*)"CALL"),  .command_code = CMD_CALL,  .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "RET",  .command_hash = hash_djb2((const char*)"RET"),   .command_code = CMD_RET,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "PUSHR",.command_hash = hash_djb2((const char*)"PUSHR"), .command_code = CMD_PUSHR, .code_of_type_argument = REG_ARGUMENT,     .argument = 0},
+    {.command_name = "POPR", .command_hash = hash_djb2((const char*)"POPR"),  .command_code = CMD_POPR,  .code_of_type_argument = REG_ARGUMENT,     .argument = 0},
+    {.command_name = "PUSHM",.command_hash = hash_djb2((const char*)"PUSHM"), .command_code = CMD_PUSHM, .code_of_type_argument = RAM_REG_ARGUMENT, .argument = 0},
+    {.command_name = "POPM", .command_hash = hash_djb2((const char*)"POPM"),  .command_code = CMD_POPM,  .code_of_type_argument = RAM_REG_ARGUMENT, .argument = 0}
+};
+
+const About_register about_register [] {
+    {.register_name = "RAX",   .register_hash = hash_djb2((const char*)"RAX")},
+    {.register_name = "[RAX]", .register_hash = hash_djb2((const char*)"[RAX]")},
+    {.register_name = "RBX",   .register_hash = hash_djb2((const char*)"RBX")},
+    {.register_name = "[RBX]", .register_hash = hash_djb2((const char*)"[RBX]")},
+    {.register_name = "RCX",   .register_hash = hash_djb2((const char*)"RCX")},
+    {.register_name = "[RCX]", .register_hash = hash_djb2((const char*)"[RCX]")},
+    {.register_name = "RDX",   .register_hash = hash_djb2((const char*)"RDX")},
+    {.register_name = "[RDX]", .register_hash = hash_djb2((const char*)"[RDX]")},
+    {.register_name = "REX",   .register_hash = hash_djb2((const char*)"REX")},
+    {.register_name = "[REX]", .register_hash = hash_djb2((const char*)"[REX]")},
+    {.register_name = "RFX",   .register_hash = hash_djb2((const char*)"RFX")},
+    {.register_name = "[RFX]", .register_hash = hash_djb2((const char*)"[RFX]")},
+    {.register_name = "RGX",   .register_hash = hash_djb2((const char*)"RGX")},
+    {.register_name = "[RGX]", .register_hash = hash_djb2((const char*)"[RGX]")},
+    {.register_name = "RHX",   .register_hash = hash_djb2((const char*)"RHX")},
+    {.register_name = "[RHX]", .register_hash = hash_djb2((const char*)"[RHX]")}
 };
 
 
@@ -112,7 +144,7 @@ void FillCommand(Assembler* assembler, About_commands* current_command, int numb
 
 assembler_status GetFillArgNum(Assembler* assembler, About_commands* current_command, char* string, int number_of_compile);
 
-status_cmp CheckRegister(Assembler* assembler, char* string, int type_argument);
+status_cmp CheckRegister(char* string, int type_argument);
 
 assembler_status GetFillArgReg(Assembler* assembler, About_commands* current_command, char* string, int number_of_compile, int type_argument);
 

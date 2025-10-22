@@ -12,7 +12,8 @@
 
 void AsmInitLabels(Assembler* assembler) {
     for (int i = 0; i < CNT_LABELS; ++i) {
-        assembler->labels[i] = -1;
+        assembler->about_labels[i].hash  =  0;
+        assembler->about_labels[i].index = -1;
     }
 }
 
@@ -51,13 +52,31 @@ assembler_status AsmVerify(const Assembler* assembler, int number_of_compile) {
     return ASM_SUCCESS;
 }
 
+unsigned long hash_djb2(const char *str) {
+    assert(str);
+
+    unsigned long hash = 5381;
+    int c = 0;
+
+    while ((c = *(str++)) != '\0') {
+        hash = ((hash << 5) + hash) + (unsigned long)c; /* hash * 33 + c */
+    }
+
+    return hash;
+}
+
 status_cmp FindCommand(Assembler* assembler, char* string, About_commands* current_command) {
     assert(assembler);
     assert(string);
     assert(current_command);
 
+    unsigned long current_hash = hash_djb2((char*)string);
+
     for(size_t i = 0; i < sizeof(about_commands) / sizeof(about_commands[0]); ++i) {
-        if(!strcmp(about_commands[i].command_name, (const char*)string)) {
+        if(about_commands[i].command_hash != current_hash) continue;
+
+        // if need hash and current hash equal
+        if (!strcmp(about_commands[i].command_name, string)) {
             *current_command = about_commands[i];
             return EQUAL;
         }
@@ -101,16 +120,22 @@ assembler_status GetFillArgNum(Assembler* assembler, About_commands* current_com
     return ASM_SUCCESS;
 }
 
-status_cmp CheckRegister(Assembler* assembler, char* string, int type_argument) {
+status_cmp CheckRegister(char* string, int type_argument) {
     assert(string);
 
-    for (int i = 0; i < CNT_REGISTERS; ++i) {
-        if (!strncmp(assembler->name_registers[i], string, LEN_NAME_REGISTER)) {
+    unsigned long current_hash = hash_djb2((char*)string);
+
+    for (size_t i = 0; i < sizeof(about_register) / sizeof(about_register[0]); ++i) {
+        if (about_register[i].register_hash != current_hash) continue;
+
+        // if need hash and current hash equal
+        if (!strncmp(about_register[i].register_name, string, LEN_NAME_REGISTER)) {
             if (type_argument == REG_ARGUMENT && strlen(string) == LEN_NAME_REGISTER)
                 return EQUAL;
 
-            if (type_argument == RAM_REG_ARGUMENT && strlen(string) == LEN_NAME_REGISTER + 1 //+1 because name has ']' at the end
-                                                  && string[LEN_NAME_REGISTER] == ']') 
+            if (type_argument == RAM_REG_ARGUMENT && strlen(string) == LEN_NAME_REGISTER + 2 //+1 because name has '[' at the begin and ']' at the end
+                                                  && string[0] == '['
+                                                  && string[LEN_NAME_REGISTER + 1] == ']') 
                 return EQUAL;
         }
     }
@@ -123,11 +148,11 @@ assembler_status GetFillArgReg(Assembler* assembler, About_commands* current_com
 
     CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
 
-    if (string[0] == '[') string++;
-
-    if (!CheckRegister(assembler, string, type_argument)) {
+    if (!CheckRegister(string, type_argument)) {
         return ASM_EXPECTS_REGISTER;
     }
+
+    if (string[0] == '[') string++;
 
     if (number_of_compile == SECOND_COMPILE) {
         type_t code_reg = string[1] - 'A';
@@ -153,22 +178,28 @@ assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_co
         return ASM_EXPECTS_JUMP_ARG;
     }
 
-    int number = 0;                                                                                                       
-    if (sscanf(string, "%*c%d", &number) != 1) {
-        return ASM_EXPECTS_JUMP_ARG;
-    }
-
-    if (0 <= number && number <= 9) {
-        if (number_of_compile == SECOND_COMPILE) {
-            if (assembler->labels[number] == -1) return ASM_NOT_FOUND_LABEL;
-
-            assembler->byte_code_data.data[assembler->byte_code_data.size] = assembler->labels[number];
-            current_command->argument = assembler->labels[number];
-        }
-
+    if (number_of_compile == FIRST_COMPILE) {
         assembler->byte_code_data.size++;
 
         return ASM_SUCCESS;
+    }
+
+    unsigned long current_hash = hash_djb2((char*)++string); // ++ because skip :
+    
+    for (int i = 0; i < CNT_LABELS; ++i) {
+        if (current_hash != assembler->about_labels[i].hash) continue;
+
+        if (number_of_compile == SECOND_COMPILE) {
+            if (assembler->about_labels[i].index == -1) return ASM_NOT_FOUND_LABEL;
+
+            assembler->byte_code_data.data[assembler->byte_code_data.size] = assembler->about_labels[i].index;
+            current_command->argument = assembler->about_labels[i].index;
+        }
+
+        assembler->byte_code_data.size++;
+        
+        return ASM_SUCCESS;
+
     }
 
     return ASM_EXPECTS_JUMP_ARG;
@@ -177,15 +208,12 @@ assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_co
 assembler_status CheckLabel(Assembler* assembler, char* string) {
     assert(string);
 
-    if (*string == ':') {                                                       
-        int number = 0;                                                        
-                                                                                
-        if (sscanf(string, "%*c%d", &number) != 1) {                            
-            return ASM_NOT_FOUND_LABEL;                                          
-        }       
-        
-        assembler->labels[number] = (type_t)assembler->byte_code_data.size;     
-        
+    if (*string == ':') {   
+        assembler->about_labels[assembler->cnt_current_label].hash  = hash_djb2((char*)++string); // ++ because skip :
+        assembler->about_labels[assembler->cnt_current_label].index = (type_t)assembler->byte_code_data.size;
+
+        assembler->cnt_current_label++;
+
         return ASM_SUCCESS;
     }
 
@@ -225,7 +253,7 @@ assembler_status PrintfByteCode(Assembler* assembler, int number_of_compile) {
 
     fprintf(stderr, "Labels:\n");
     for (int i = 0; i < CNT_LABELS; ++i) {
-        fprintf(stderr, TYPE_T_PRINTF_SPECIFIER " ", assembler->labels[i]);
+        fprintf(stderr, "hash %lu, index " TYPE_T_PRINTF_SPECIFIER "\n", assembler->about_labels[i].hash, assembler->about_labels[i].index);
     }
     fprintf(stderr, "\n\n");
 
@@ -234,6 +262,7 @@ assembler_status PrintfByteCode(Assembler* assembler, int number_of_compile) {
     // getchar(); // TODO print message
 }
 
+// FIXME
 #define OPEN_LISTING_FILE(file)                                  \
         if (number_of_compile == SECOND_COMPILE) {               \
             file = fopen("listing_file.txt", "w");               \
@@ -243,15 +272,17 @@ assembler_status PrintfByteCode(Assembler* assembler, int number_of_compile) {
             }                                                    \
         }
 
-#define CLOSE_LISTING_FILE(file)                                                     \
+#define CLOSE_LISTING_FILE(file)                                                      \
         if (number_of_compile == SECOND_COMPILE) {                                    \
-            if (fclose(file) == EOF) {                                        \
+            if (fclose(file) == EOF) {                                                \
                 CHECK_AND_RETURN_ERRORS_ASM(ASM_CLOSE_ERROR,    perror("Error is:")); \
             }                                                                         \
         }
 
 assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
     CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
+
+    assembler->cnt_current_label = 0;
 
     FILE* listing_file = NULL;
     OPEN_LISTING_FILE(listing_file);
@@ -266,6 +297,7 @@ assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
         }
 
         if (CheckLabel(assembler, assembler->about_text.pointer_on_text[i]) == ASM_SUCCESS) continue;
+        
 
         About_commands current_command = {};
         if (!FindCommand(assembler, assembler->about_text.pointer_on_text[i], &current_command)) {
@@ -276,6 +308,7 @@ assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
 
         if (current_command.command_code == CMD_HLT) find_cmd_hlt = true;
 
+        // FIXME pass_args
         if (current_command.code_of_type_argument == NUM_ARGUMENT)   
             CHECK_AND_RETURN_ERRORS_ASM(GetFillArgNum(assembler, &current_command, assembler->about_text.pointer_on_text[++i], number_of_compile));
             
