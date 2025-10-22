@@ -29,8 +29,7 @@ assembler_status OneginReadFile(Assembler* assembler) {
 
     FILE *text = fopen(assembler->about_text.text_name, "r");
     if (text == NULL) {
-        CHECK_AND_RETURN_ERRORS_ASM(ASM_OPEN_ERROR,     perror("Error is"),
-                                                        fclose(text));
+        CHECK_AND_RETURN_ERRORS_ASM(ASM_OPEN_ERROR,     perror("Error is"));
     }
 
     assembler->about_text.text_size = OneginTextSize(assembler->about_text.text_name);
