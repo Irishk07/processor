@@ -68,11 +68,13 @@ processor_status ProcVerify(const Processor* processor) {
         return PROC_NULL_POINTER_ON_STRUCT;
     }
 
-    if (processor->about_text.pointer_on_text == NULL)   return PROC_NULL_POINTER_ON_DATA;
+    if (processor->about_text.pointer_on_text == NULL)          return PROC_NULL_POINTER_ON_DATA;
 
-    if (processor->about_text.text_name == NULL)         return PROC_NULL_POINTER_ON_FILE;
+    if (processor->about_text.text_name == NULL)                return PROC_NULL_POINTER_ON_FILE;
 
-    if (StackVerify(&processor->stack) != STACK_SUCCESS) return STACK_ERROR;
+    if (StackVerify(&processor->stack) != STACK_SUCCESS)        return STACK_ERROR;
+
+    if (StackVerify(&processor->return_stack) != STACK_SUCCESS) return STACK_ERROR;
 
     return PROC_SUCCESS;
 }
