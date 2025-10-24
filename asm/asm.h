@@ -62,7 +62,7 @@ enum type_arguments {
 
 struct About_commands {
     const char* command_name;
-    unsigned long command_hash;
+    unsigned long hash;
     type_t command_code;
     int code_of_type_argument;
     type_t argument;
@@ -75,7 +75,7 @@ struct About_labels {
 
 struct About_register {
     const char* register_name;
-    unsigned long register_hash;
+    unsigned long hash;
 };
 
 struct Assembler {
@@ -124,6 +124,8 @@ assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_co
 void FillListingFile(char* pointer_on_command, About_commands* current_command, FILE* listing_file, int type_argument);
 
 assembler_status PrintfByteCode(Assembler* assembler, int number_of_compile);
+
+assembler_status CheckDoubleLabels(Assembler* assembler);
 
 assembler_status CreatByteCodeData(Assembler* assembler);
 

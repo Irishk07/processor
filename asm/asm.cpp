@@ -10,52 +10,51 @@
 #include "onegin.h"
 
 About_commands about_commands [] = {
-    {.command_name = "PUSH", .command_hash = hash_djb2((const char*)"PUSH"),  .command_code = CMD_PUSH,  .code_of_type_argument = NUM_ARGUMENT,     .argument = 0},
-    {.command_name = "POP",  .command_hash = hash_djb2((const char*)"POP"),   .command_code = CMD_POP,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "ADD",  .command_hash = hash_djb2((const char*)"ADD"),   .command_code = CMD_ADD,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "SUB",  .command_hash = hash_djb2((const char*)"SUB"),   .command_code = CMD_SUB,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "DIV",  .command_hash = hash_djb2((const char*)"DIV"),   .command_code = CMD_DIV,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "MUL",  .command_hash = hash_djb2((const char*)"MUL"),   .command_code = CMD_MUL,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "SQRT", .command_hash = hash_djb2((const char*)"SQRT"),  .command_code = CMD_SQRT,  .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "POW",  .command_hash = hash_djb2((const char*)"POW"),   .command_code = CMD_POW,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "IN",   .command_hash = hash_djb2((const char*)"IN"),    .command_code = CMD_IN,    .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "OUT",  .command_hash = hash_djb2((const char*)"OUT"),   .command_code = CMD_OUT,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "HLT",  .command_hash = hash_djb2((const char*)"HLT"),   .command_code = CMD_HLT,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "JMP",  .command_hash = hash_djb2((const char*)"JMP"),   .command_code = CMD_JMP,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JB",   .command_hash = hash_djb2((const char*)"JB"),    .command_code = CMD_JB,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JBE",  .command_hash = hash_djb2((const char*)"JBE"),   .command_code = CMD_JBE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JA",   .command_hash = hash_djb2((const char*)"JA"),    .command_code = CMD_JA,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JAE",  .command_hash = hash_djb2((const char*)"JAE"),   .command_code = CMD_JAE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JE",   .command_hash = hash_djb2((const char*)"JE"),    .command_code = CMD_JE,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JNE",  .command_hash = hash_djb2((const char*)"JNE"),   .command_code = CMD_JNE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "CALL", .command_hash = hash_djb2((const char*)"CALL"),  .command_code = CMD_CALL,  .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "RET",  .command_hash = hash_djb2((const char*)"RET"),   .command_code = CMD_RET,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "PUSHR",.command_hash = hash_djb2((const char*)"PUSHR"), .command_code = CMD_PUSHR, .code_of_type_argument = REG_ARGUMENT,     .argument = 0},
-    {.command_name = "POPR", .command_hash = hash_djb2((const char*)"POPR"),  .command_code = CMD_POPR,  .code_of_type_argument = REG_ARGUMENT,     .argument = 0},
-    {.command_name = "PUSHM",.command_hash = hash_djb2((const char*)"PUSHM"), .command_code = CMD_PUSHM, .code_of_type_argument = RAM_REG_ARGUMENT, .argument = 0},
-    {.command_name = "POPM", .command_hash = hash_djb2((const char*)"POPM"),  .command_code = CMD_POPM,  .code_of_type_argument = RAM_REG_ARGUMENT, .argument = 0}
+    {.command_name = "PUSH", .hash = hash_djb2((const char*)"PUSH"),  .command_code = CMD_PUSH,  .code_of_type_argument = NUM_ARGUMENT,     .argument = 0},
+    {.command_name = "POP",  .hash = hash_djb2((const char*)"POP"),   .command_code = CMD_POP,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "ADD",  .hash = hash_djb2((const char*)"ADD"),   .command_code = CMD_ADD,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "SUB",  .hash = hash_djb2((const char*)"SUB"),   .command_code = CMD_SUB,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "DIV",  .hash = hash_djb2((const char*)"DIV"),   .command_code = CMD_DIV,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "MUL",  .hash = hash_djb2((const char*)"MUL"),   .command_code = CMD_MUL,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "SQRT", .hash = hash_djb2((const char*)"SQRT"),  .command_code = CMD_SQRT,  .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "POW",  .hash = hash_djb2((const char*)"POW"),   .command_code = CMD_POW,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "IN",   .hash = hash_djb2((const char*)"IN"),    .command_code = CMD_IN,    .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "OUT",  .hash = hash_djb2((const char*)"OUT"),   .command_code = CMD_OUT,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "HLT",  .hash = hash_djb2((const char*)"HLT"),   .command_code = CMD_HLT,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "JMP",  .hash = hash_djb2((const char*)"JMP"),   .command_code = CMD_JMP,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "JB",   .hash = hash_djb2((const char*)"JB"),    .command_code = CMD_JB,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "JBE",  .hash = hash_djb2((const char*)"JBE"),   .command_code = CMD_JBE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "JA",   .hash = hash_djb2((const char*)"JA"),    .command_code = CMD_JA,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "JAE",  .hash = hash_djb2((const char*)"JAE"),   .command_code = CMD_JAE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "JE",   .hash = hash_djb2((const char*)"JE"),    .command_code = CMD_JE,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "JNE",  .hash = hash_djb2((const char*)"JNE"),   .command_code = CMD_JNE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "CALL", .hash = hash_djb2((const char*)"CALL"),  .command_code = CMD_CALL,  .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
+    {.command_name = "RET",  .hash = hash_djb2((const char*)"RET"),   .command_code = CMD_RET,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
+    {.command_name = "PUSHR",.hash = hash_djb2((const char*)"PUSHR"), .command_code = CMD_PUSHR, .code_of_type_argument = REG_ARGUMENT,     .argument = 0},
+    {.command_name = "POPR", .hash = hash_djb2((const char*)"POPR"),  .command_code = CMD_POPR,  .code_of_type_argument = REG_ARGUMENT,     .argument = 0},
+    {.command_name = "PUSHM",.hash = hash_djb2((const char*)"PUSHM"), .command_code = CMD_PUSHM, .code_of_type_argument = RAM_REG_ARGUMENT, .argument = 0},
+    {.command_name = "POPM", .hash = hash_djb2((const char*)"POPM"),  .command_code = CMD_POPM,  .code_of_type_argument = RAM_REG_ARGUMENT, .argument = 0}
 };
 
 About_register about_register [] {
-    {.register_name = "RAX",   .register_hash = hash_djb2((const char*)"RAX")},
-    {.register_name = "[RAX]", .register_hash = hash_djb2((const char*)"[RAX]")},
-    {.register_name = "RBX",   .register_hash = hash_djb2((const char*)"RBX")},
-    {.register_name = "[RBX]", .register_hash = hash_djb2((const char*)"[RBX]")},
-    {.register_name = "RCX",   .register_hash = hash_djb2((const char*)"RCX")},
-    {.register_name = "[RCX]", .register_hash = hash_djb2((const char*)"[RCX]")},
-    {.register_name = "RDX",   .register_hash = hash_djb2((const char*)"RDX")},
-    {.register_name = "[RDX]", .register_hash = hash_djb2((const char*)"[RDX]")},
-    {.register_name = "REX",   .register_hash = hash_djb2((const char*)"REX")},
-    {.register_name = "[REX]", .register_hash = hash_djb2((const char*)"[REX]")},
-    {.register_name = "RFX",   .register_hash = hash_djb2((const char*)"RFX")},
-    {.register_name = "[RFX]", .register_hash = hash_djb2((const char*)"[RFX]")},
-    {.register_name = "RGX",   .register_hash = hash_djb2((const char*)"RGX")},
-    {.register_name = "[RGX]", .register_hash = hash_djb2((const char*)"[RGX]")},
-    {.register_name = "RHX",   .register_hash = hash_djb2((const char*)"RHX")},
-    {.register_name = "[RHX]", .register_hash = hash_djb2((const char*)"[RHX]")}
+    {.register_name = "RAX",   .hash = hash_djb2((const char*)"RAX")},
+    {.register_name = "[RAX]", .hash = hash_djb2((const char*)"[RAX]")},
+    {.register_name = "RBX",   .hash = hash_djb2((const char*)"RBX")},
+    {.register_name = "[RBX]", .hash = hash_djb2((const char*)"[RBX]")},
+    {.register_name = "RCX",   .hash = hash_djb2((const char*)"RCX")},
+    {.register_name = "[RCX]", .hash = hash_djb2((const char*)"[RCX]")},
+    {.register_name = "RDX",   .hash = hash_djb2((const char*)"RDX")},
+    {.register_name = "[RDX]", .hash = hash_djb2((const char*)"[RDX]")},
+    {.register_name = "REX",   .hash = hash_djb2((const char*)"REX")},
+    {.register_name = "[REX]", .hash = hash_djb2((const char*)"[REX]")},
+    {.register_name = "RFX",   .hash = hash_djb2((const char*)"RFX")},
+    {.register_name = "[RFX]", .hash = hash_djb2((const char*)"[RFX]")},
+    {.register_name = "RGX",   .hash = hash_djb2((const char*)"RGX")},
+    {.register_name = "[RGX]", .hash = hash_djb2((const char*)"[RGX]")},
+    {.register_name = "RHX",   .hash = hash_djb2((const char*)"RHX")},
+    {.register_name = "[RHX]", .hash = hash_djb2((const char*)"[RHX]")}
 };
 
-// FIXME дубликаты меток (сортировка вставками при первом проходе, дождаться конца первого прохода, qsort, проверка соседних)
 
 assembler_status AsmCtor(Assembler* assembler, const char* name_commands_file) {
     assert(assembler);
@@ -114,60 +113,43 @@ unsigned long hash_djb2(const char *str) {
     return hash;
 }
 
-int qsort_commands_comparator(const void* param1, const void* param2) {
-    const struct About_commands* struct1 = (const struct About_commands*)param1;
-    const struct About_commands* struct2 = (const struct About_commands*)param2;
-    
-    if (struct1->command_hash < struct2->command_hash) return -1;
-
-    if (struct1->command_hash > struct2->command_hash) return 1;
-
-    return 0;
+#define DO_QSORT_COMPARATOR(name, type)                                          \
+                                                                                 \
+int qsort_ ## name ## _comparator(const void* param1, const void* param2) {      \
+    const struct type* struct1 = (const struct type*)param1;                     \
+    const struct type* struct2 = (const struct type*)param2;                     \
+                                                                                 \
+    if (struct1->hash < struct2->hash) return -1;                                \
+                                                                                 \
+    if (struct1->hash > struct2->hash) return 1;                                 \
+                                                                                 \
+    return 0;                                                                    \
 }
 
-int qsort_register_comparator(const void* param1, const void* param2) {
-    const struct About_register* struct1 = (const struct About_register*)param1;
-    const struct About_register* struct2 = (const struct About_register*)param2;
-    
-    if (struct1->register_hash < struct2->register_hash) return -1;
+DO_QSORT_COMPARATOR(commands, About_commands)
+DO_QSORT_COMPARATOR(register, About_register)
+DO_QSORT_COMPARATOR(label,    About_labels)
 
-    if (struct1->register_hash > struct2->register_hash) return 1;
+#undef DO_QSORT_COMPARATOR
 
-    return 0;
+#define DO_BSEARCH_COMPARATOR(name, type)                                      \
+                                                                               \
+int bsearch_ ## name ## _comparator(const void* param1, const void* param2) {  \
+    unsigned long search_hash = *(const unsigned long*)param1;                 \
+    const struct type* struct1 = (const struct type*)param2;                   \
+                                                                               \
+    if (search_hash < struct1->hash) return -1;                                \
+                                                                               \
+    if (search_hash > struct1->hash) return 1;                                 \
+                                                                               \
+    return 0;                                                                  \
 }
 
-int qsort_label_comparator(const void* param1, const void* param2) {
-    const struct About_labels* struct1 = (const struct About_labels*)param1;
-    const struct About_labels* struct2 = (const struct About_labels*)param2;
-    
-    if (struct1->hash < struct2->hash) return -1;
+DO_BSEARCH_COMPARATOR(commands, About_commands)
+DO_BSEARCH_COMPARATOR(register, About_register)
 
-    if (struct1->hash > struct2->hash) return 1;
+#undef DO_BSEARCH_COMPARATOR
 
-    return 0;
-}
-
-int bsearch_commands_comparator(const void* param1, const void* param2) {
-    unsigned long search_hash = *(const unsigned long*)param1;
-    const struct About_commands* struct1 = (const struct About_commands*)param2;
-    
-    if (search_hash < struct1->command_hash) return -1;
-
-    if (search_hash > struct1->command_hash) return 1;
-
-    return 0;
-}
-
-int bsearch_register_comparator(const void* param1, const void* param2) {
-    unsigned long search_hash = *(const unsigned long*)param1;
-    const struct About_register* struct1 = (const struct About_register*)param2;
-    
-    if (search_hash < struct1->register_hash) return -1;
-
-    if (search_hash > struct1->register_hash) return 1;
-
-    return 0;
-}
 
 assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
     CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
@@ -192,8 +174,10 @@ assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
             continue;
         }
 
+        // FIXME second compile without labels? or bsearch
         if (assembler->about_text.pointer_on_text[i][0] == ':') {
-            InsertLabel(assembler, assembler->about_text.pointer_on_text[i]);
+            if (number_of_compile == FIRST_COMPILE)
+                InsertLabel(assembler, assembler->about_text.pointer_on_text[i]);
             continue;
         }
 
@@ -229,14 +213,10 @@ assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
         }
     }
 
-    // FIXME
     if (number_of_compile == FIRST_COMPILE) {
-        qsort(assembler->about_labels, sizeof(assembler->about_labels) / sizeof(assembler->about_labels[0]), sizeof(About_labels), &qsort_label_comparator);
-        for (size_t i = 0; i < sizeof(assembler->about_labels) / sizeof(assembler->about_labels[0]) - 1; ++i) {
-            if (assembler->about_labels[i].hash == assembler->about_labels[i + 1].hash) {
-                CHECK_AND_RETURN_ERRORS_ASM(ASM_DOUBLE_LABEL);
-            }
-        }
+        assembler->cnt_current_label = 0;
+
+        CHECK_AND_RETURN_ERRORS_ASM(CheckDoubleLabels(assembler));
     }
 
     CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
@@ -249,6 +229,11 @@ void InsertLabel(Assembler* assembler, char* string) {
 
     assembler->about_labels[assembler->cnt_current_label].hash  = hash_djb2((char*)++string); // ++ because skip :
     assembler->about_labels[assembler->cnt_current_label].index = (type_t)assembler->byte_code_data.size;
+
+    // for (size_t i = 0; i < sizeof(assembler->about_labels) / sizeof(assembler->about_labels[0]); ++i) {
+    //     fprintf(stderr, "hash %lu, index " TYPE_T_PRINTF_SPECIFIER "\n", assembler->about_labels[i].hash, assembler->about_labels[i].index);
+    // }
+    // fprintf(stderr, "\n");
 
     assembler->cnt_current_label++;
 }
@@ -449,14 +434,26 @@ assembler_status PrintfByteCode(Assembler* assembler, int number_of_compile) {
     }
 
     fprintf(stderr, "Labels:\n");
-    for (int i = 0; i < CNT_LABELS; ++i) {
+    for (size_t i = 0; i < sizeof(assembler->about_labels) / sizeof(assembler->about_labels[0]); ++i) {
         fprintf(stderr, "hash %lu, index " TYPE_T_PRINTF_SPECIFIER "\n", assembler->about_labels[i].hash, assembler->about_labels[i].index);
     }
     fprintf(stderr, "\n\n");
 
     return ASM_SUCCESS;
+}
 
-    // getchar(); // TODO print message
+assembler_status CheckDoubleLabels(Assembler* assembler) {
+    qsort(assembler->about_labels, sizeof(assembler->about_labels) / sizeof(assembler->about_labels[0]), 
+          sizeof(About_labels), &qsort_label_comparator);
+
+    for (size_t i = 0; i < sizeof(assembler->about_labels) / sizeof(assembler->about_labels[0]) - 1; ++i) {
+        if (assembler->about_labels[i].hash == assembler->about_labels[i + 1].hash &&
+            assembler->about_labels[i].hash != 0) {
+            CHECK_AND_RETURN_ERRORS_ASM(ASM_DOUBLE_LABEL);
+        }
+    }
+
+    return ASM_SUCCESS;
 }
 
 assembler_status CreatByteCodeData(Assembler* assembler) {
