@@ -16,8 +16,6 @@
 const int LEN_NAME_REGISTER = 3;
 const int CNT_LABELS        = 10;
 const int MAX_CNT_COMMANDS  = 128;
-const int FIRST_COMPILE     = 1;
-const int SECOND_COMPILE    = 2;
 
 
 enum assembler_status {
@@ -46,10 +44,9 @@ enum status_cmp {
     ASM_CMP_ERROR = -1
 };
 
-
-struct Byte_code_data {
-    type_t* data;
-    size_t size;
+enum number_of_compile {
+    FIRST_COMPILE  = 1,
+    SECOND_COMPILE = 2
 };
 
 enum type_arguments {
@@ -58,6 +55,12 @@ enum type_arguments {
     REG_ARGUMENT     = 2,
     LABEL_ARGUMENT   = 3,
     RAM_REG_ARGUMENT = 4
+};
+
+
+struct Byte_code_data {
+    type_t* data;
+    size_t size;
 };
 
 struct About_commands {
@@ -89,9 +92,11 @@ unsigned long hash_djb2(const char *str);
 
 void AsmInitLabels(Assembler* assembler);
 
+number_of_compile FirstOrSecondCompile(const Assembler* assembler);
+
 assembler_status AsmCtor(Assembler* assembler, const char* name_comands_file);
 
-assembler_status AsmVerify(const Assembler* assembler, int number_of_compile);
+assembler_status AsmVerify(const Assembler* assembler);
 
 int qsort_commands_comparator(const void* num1, const void* num2);
 
@@ -103,7 +108,7 @@ int bsearch_commands_comparator(const void* param1, const void* param2);
 
 int bsearch_register_comparator(const void* param1, const void* param2);
 
-assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile);
+assembler_status Assemblirovanie(Assembler* assembler);
 
 void InsertLabel(Assembler* assembler, char* string);
 
@@ -111,19 +116,19 @@ status_cmp FindCommand(Assembler* assembler, char* string, About_commands* curre
 
 void FillCommand(Assembler* assembler, About_commands* current_command);
 
-assembler_status PassArgs(Assembler* assembler, About_commands* current_command, int number_of_compile, char* string);
+assembler_status PassArgs(Assembler* assembler, About_commands* current_command, char* string);
 
-assembler_status GetFillArgNum(Assembler* assembler, About_commands* current_command, char* string, int number_of_compile);
+assembler_status GetFillArgNum(Assembler* assembler, About_commands* current_command, char* string);
 
-assembler_status GetFillArgReg(Assembler* assembler, About_commands* current_command, char* string, int number_of_compile, int type_argument);
+assembler_status GetFillArgReg(Assembler* assembler, About_commands* current_command, char* string, int type_argument);
 
 status_cmp CheckRegister(char* string, int type_argument);
 
-assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_command, char* string, int number_of_compile);
+assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_command, char* string);
 
 void FillListingFile(char* pointer_on_command, About_commands* current_command, FILE* listing_file, int type_argument);
 
-assembler_status PrintfByteCode(Assembler* assembler, int number_of_compile);
+assembler_status PrintfByteCode(Assembler* assembler);
 
 assembler_status CheckDoubleLabels(Assembler* assembler);
 

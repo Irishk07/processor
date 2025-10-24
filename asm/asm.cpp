@@ -9,6 +9,7 @@
 #include "../common.h"
 #include "onegin.h"
 
+// FIXME объединить с процессорным...как
 About_commands about_commands [] = {
     {.command_name = "PUSH", .hash = hash_djb2((const char*)"PUSH"),  .command_code = CMD_PUSH,  .code_of_type_argument = NUM_ARGUMENT,     .argument = 0},
     {.command_name = "POP",  .hash = hash_djb2((const char*)"POP"),   .command_code = CMD_POP,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
@@ -69,7 +70,7 @@ assembler_status AsmCtor(Assembler* assembler, const char* name_commands_file) {
 
     CHECK_AND_RETURN_ERRORS_ASM(DivisionIntoCommands(assembler));
 
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, FIRST_COMPILE));
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
     qsort(about_commands, sizeof(about_commands) / sizeof(about_commands[0]), sizeof(About_commands), &qsort_commands_comparator);
     qsort(about_register, sizeof(about_register) / sizeof(about_register[0]), sizeof(About_register), &qsort_register_comparator);
@@ -84,12 +85,19 @@ void AsmInitLabels(Assembler* assembler) {
     }
 }
 
-assembler_status AsmVerify(const Assembler* assembler, int number_of_compile) {
+number_of_compile FirstOrSecondCompile(const Assembler* assembler) {
+    if (assembler->byte_code_data.data == NULL) 
+        return FIRST_COMPILE;
+
+    return SECOND_COMPILE;
+}
+
+assembler_status AsmVerify(const Assembler* assembler) {
     if (assembler == NULL) {
         return ASM_NULL_POINTER_ON_STRUCT;
     }
 
-    if (number_of_compile == SECOND_COMPILE && assembler->byte_code_data.data == NULL) {
+    if (FirstOrSecondCompile(assembler) == SECOND_COMPILE && assembler->byte_code_data.data == NULL) {
         return ASM_NULL_POINTER_ON_DATA;
     }
 
@@ -151,13 +159,13 @@ DO_BSEARCH_COMPARATOR(register, About_register)
 #undef DO_BSEARCH_COMPARATOR
 
 
-assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
+assembler_status Assemblirovanie(Assembler* assembler) {
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
     assembler->cnt_current_label = 0;
 
     FILE* listing_file = NULL;
-    if (number_of_compile == SECOND_COMPILE) {
+    if (FirstOrSecondCompile(assembler) == SECOND_COMPILE) {
         listing_file = fopen("listing_file.txt", "w");
 
         if (listing_file == NULL) {
@@ -168,15 +176,14 @@ assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
     bool find_cmd_hlt = false;
 
     for (int i = 0; i < assembler->about_text.cnt_strok; ++i) {
-        CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
+        CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
         if (strlen(assembler->about_text.pointer_on_text[i]) == 0) {
             continue;
         }
 
-        // FIXME second compile without labels? or bsearch
         if (assembler->about_text.pointer_on_text[i][0] == ':') {
-            if (number_of_compile == FIRST_COMPILE)
+            if (FirstOrSecondCompile(assembler) == FIRST_COMPILE)
                 InsertLabel(assembler, assembler->about_text.pointer_on_text[i]);
             continue;
         }
@@ -191,35 +198,35 @@ assembler_status Assemblirovanie(Assembler* assembler, int number_of_compile) {
         if (current_command.command_code == CMD_HLT) find_cmd_hlt = true;
 
         if (current_command.code_of_type_argument != NO_ARGUMENT) {
-            CHECK_AND_RETURN_ERRORS_ASM(PassArgs(assembler, &current_command, number_of_compile, assembler->about_text.pointer_on_text[++i]));
+            CHECK_AND_RETURN_ERRORS_ASM(PassArgs(assembler, &current_command, assembler->about_text.pointer_on_text[++i]));
         }
 
-        if (number_of_compile == SECOND_COMPILE) {
+        if (FirstOrSecondCompile(assembler) == SECOND_COMPILE) {
             FillListingFile(assembler->about_text.pointer_on_text[i], &current_command, listing_file, current_command.code_of_type_argument);
         }
 
-        CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
+        CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
     }
 
     if (!find_cmd_hlt) {
         CHECK_AND_RETURN_ERRORS_ASM(ASM_EXPECTS_HLT);
     }
 
-    PrintfByteCode(assembler, number_of_compile);
+    PrintfByteCode(assembler);
 
-    if (number_of_compile == SECOND_COMPILE) {
+    if (FirstOrSecondCompile(assembler) == SECOND_COMPILE) {
         if (fclose(listing_file) == EOF) {
             CHECK_AND_RETURN_ERRORS_ASM(ASM_CLOSE_ERROR,    perror("Error is:"));
         }
     }
 
-    if (number_of_compile == FIRST_COMPILE) {
+    if (FirstOrSecondCompile(assembler) == FIRST_COMPILE) {
         assembler->cnt_current_label = 0;
 
         CHECK_AND_RETURN_ERRORS_ASM(CheckDoubleLabels(assembler));
     }
 
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
     return ASM_SUCCESS;
 }
@@ -229,11 +236,6 @@ void InsertLabel(Assembler* assembler, char* string) {
 
     assembler->about_labels[assembler->cnt_current_label].hash  = hash_djb2((char*)++string); // ++ because skip :
     assembler->about_labels[assembler->cnt_current_label].index = (type_t)assembler->byte_code_data.size;
-
-    // for (size_t i = 0; i < sizeof(assembler->about_labels) / sizeof(assembler->about_labels[0]); ++i) {
-    //     fprintf(stderr, "hash %lu, index " TYPE_T_PRINTF_SPECIFIER "\n", assembler->about_labels[i].hash, assembler->about_labels[i].index);
-    // }
-    // fprintf(stderr, "\n");
 
     assembler->cnt_current_label++;
 }
@@ -248,7 +250,8 @@ status_cmp FindCommand(Assembler* assembler, char* string, About_commands* curre
     About_commands* res = (About_commands*)bsearch(&current_hash, about_commands, sizeof(about_commands) / sizeof(about_commands[0]), 
                                                    sizeof(About_commands), &bsearch_commands_comparator);
 
-    if (res == NULL) return DIFFERENT;
+    if (res == NULL) 
+        return DIFFERENT;
 
     long int index = res - about_commands;
 
@@ -271,35 +274,35 @@ void FillCommand(Assembler* assembler, About_commands* current_command) {
     assembler->byte_code_data.size++;
 }
 
-assembler_status PassArgs(Assembler* assembler, About_commands* current_command, int number_of_compile, char* string) {
+assembler_status PassArgs(Assembler* assembler, About_commands* current_command, char* string) {
     if (current_command->code_of_type_argument == NUM_ARGUMENT) {
-        if (GetFillArgNum(assembler, current_command, string, number_of_compile) == ASM_SUCCESS)
+        if (GetFillArgNum(assembler, current_command, string) == ASM_SUCCESS)
             return ASM_SUCCESS;
     }
 
     if (current_command->code_of_type_argument == REG_ARGUMENT ||
         current_command->code_of_type_argument == RAM_REG_ARGUMENT) {
-        if (GetFillArgReg(assembler, current_command, string, number_of_compile, current_command->code_of_type_argument) == ASM_SUCCESS)
+        if (GetFillArgReg(assembler, current_command, string, current_command->code_of_type_argument) == ASM_SUCCESS)
             return ASM_SUCCESS;
     }
 
     if (current_command->code_of_type_argument == LABEL_ARGUMENT) {
-        if (GetFillArgJump(assembler, current_command, string, number_of_compile) == ASM_SUCCESS)
+        if (GetFillArgJump(assembler, current_command, string) == ASM_SUCCESS)
             return ASM_SUCCESS;
     }
 
     return ASM_EXPECTS_ARG;
 }
 
-assembler_status GetFillArgNum(Assembler* assembler, About_commands* current_command, char* string, int number_of_compile) {
+assembler_status GetFillArgNum(Assembler* assembler, About_commands* current_command, char* string) {
     assert(string);
 
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
     type_t number = 0;
 
     if (sscanf(string, TYPE_T_PRINTF_SPECIFIER, &number) == 1) {
-        if (number_of_compile == SECOND_COMPILE) {
+        if (FirstOrSecondCompile(assembler) == SECOND_COMPILE) {
             assembler->byte_code_data.data[assembler->byte_code_data.size] = number;
             current_command->argument = number;
         }
@@ -310,23 +313,24 @@ assembler_status GetFillArgNum(Assembler* assembler, About_commands* current_com
         return ASM_EXPECTS_NUMBER;
     }
 
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
     return ASM_SUCCESS;
 }
 
-assembler_status GetFillArgReg(Assembler* assembler, About_commands* current_command, char* string, int number_of_compile, int type_argument) {
+assembler_status GetFillArgReg(Assembler* assembler, About_commands* current_command, char* string, int type_argument) {
     assert(string);
 
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
     if (!CheckRegister(string, type_argument)) {
         return ASM_EXPECTS_REGISTER;
     }
 
-    if (string[0] == '[') string++;
+    if (string[0] == '[') 
+        string++;
 
-    if (number_of_compile == SECOND_COMPILE) {
+    if (FirstOrSecondCompile(assembler) == SECOND_COMPILE) {
         type_t code_reg = string[1] - 'A';
         assembler->byte_code_data.data[assembler->byte_code_data.size] = code_reg;
         current_command->argument = code_reg;
@@ -334,7 +338,7 @@ assembler_status GetFillArgReg(Assembler* assembler, About_commands* current_com
 
     assembler->byte_code_data.size++;
 
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
     return ASM_SUCCESS;
 }
@@ -347,7 +351,8 @@ status_cmp CheckRegister(char* string, int type_argument) {
     About_register* res = (About_register*)bsearch(&current_hash, about_register, sizeof(about_register) / sizeof(about_register[0]), 
                                                      sizeof(About_register), &bsearch_register_comparator);
 
-    if (res == NULL) return DIFFERENT;
+    if (res == NULL) 
+        return DIFFERENT;
 
     long int index = res - about_register;
 
@@ -364,10 +369,10 @@ status_cmp CheckRegister(char* string, int type_argument) {
     return DIFFERENT;
 }
 
-assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_command, char* string, int number_of_compile) {
+assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_command, char* string) {
     assert(string);
 
-    if (GetFillArgNum(assembler, current_command, string, number_of_compile) == ASM_SUCCESS) {
+    if (GetFillArgNum(assembler, current_command, string) == ASM_SUCCESS) {
         return ASM_SUCCESS;
     }
 
@@ -375,7 +380,7 @@ assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_co
         return ASM_EXPECTS_JUMP_ARG;
     }
 
-    if (number_of_compile == FIRST_COMPILE) {
+    if (FirstOrSecondCompile(assembler) == FIRST_COMPILE) {
         assembler->byte_code_data.size++;
 
         return ASM_SUCCESS;
@@ -383,11 +388,13 @@ assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_co
 
     unsigned long current_hash = hash_djb2((char*)++string); // ++ because skip :
 
-    for (int i = 0; i < CNT_LABELS; ++i) {
-        if (current_hash != assembler->about_labels[i].hash) continue;
+    for (size_t i = 0; i < sizeof(assembler->about_labels) / sizeof(assembler->about_labels[0]); ++i) {
+        if (current_hash != assembler->about_labels[i].hash)
+            continue;
 
-        if (number_of_compile == SECOND_COMPILE) {
-            if (assembler->about_labels[i].index == -1) return ASM_NOT_FOUND_LABEL;
+        if (FirstOrSecondCompile(assembler) == SECOND_COMPILE) {
+            if (assembler->about_labels[i].index == -1)
+                return ASM_NOT_FOUND_LABEL;
 
             assembler->byte_code_data.data[assembler->byte_code_data.size] = assembler->about_labels[i].index;
             current_command->argument = assembler->about_labels[i].index;
@@ -418,12 +425,12 @@ void FillListingFile(char* pointer_on_command, About_commands* current_command, 
     fprintf(listing_file, "\n");
 }
 
-assembler_status PrintfByteCode(Assembler* assembler, int number_of_compile) {
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, number_of_compile));
+assembler_status PrintfByteCode(Assembler* assembler) {
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
-    fprintf(stderr, "Compile number %d:\n", number_of_compile);
+    fprintf(stderr, "Compile number %d:\n", FirstOrSecondCompile(assembler));
 
-    if (number_of_compile == SECOND_COMPILE) {
+    if (FirstOrSecondCompile(assembler) == SECOND_COMPILE) {
         fprintf(stderr, "Byte code:\n");
 
         for (size_t i = 0; i < assembler->byte_code_data.size; ++i) {
@@ -473,7 +480,7 @@ assembler_status CreatByteCodeData(Assembler* assembler) {
 assembler_status CreateExeFile(const Assembler* assembler, const char* name_byte_code_file) {
     assert(name_byte_code_file);
     assert(assembler->about_text.pointer_on_text);
-    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler, SECOND_COMPILE));
+    CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
     FILE* text = fopen(name_byte_code_file, "w");
     if (text == NULL) {
@@ -494,7 +501,7 @@ assembler_status CreateExeFile(const Assembler* assembler, const char* name_byte
 }
 
 assembler_status AsmDtor(Assembler* assembler) {
-    assembler_status code_error = AsmVerify(assembler, SECOND_COMPILE);
+    assembler_status code_error = AsmVerify(assembler);
 
     free(assembler->byte_code_data.data);
     free(assembler->about_text.text);
