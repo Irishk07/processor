@@ -8,20 +8,6 @@
 #include "asm.h"
 
 
-int OneginTextSize(const char *text_name) {
-    assert(text_name);
-
-    struct stat text_info = {};
-
-    if (stat(text_name, &text_info) == -1) {
-        perror("Error is");
-
-        return -1;
-    }
-
-    return (int)text_info.st_size;
-}
-
 assembler_status OneginReadFile(Assembler* assembler) {
     assert(assembler);
     assert(assembler->about_text.text_name);
@@ -69,6 +55,20 @@ assembler_status OneginReadFile(Assembler* assembler) {
     }
 
     return ASM_SUCCESS;
+}
+
+int OneginTextSize(const char *text_name) {
+    assert(text_name);
+
+    struct stat text_info = {};
+
+    if (stat(text_name, &text_info) == -1) {
+        perror("Error is");
+
+        return -1;
+    }
+
+    return (int)text_info.st_size;
 }
 
 assembler_status DivisionIntoCommands(Assembler* assembler) {

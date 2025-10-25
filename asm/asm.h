@@ -13,10 +13,9 @@
         }
 
 
-const int LEN_NAME_REGISTER = 3;
-const int CNT_LABELS        = 10;
-const int MAX_CNT_COMMANDS  = 128;
-
+const int LEN_NAME_REGISTER          = 3;
+const int CNT_LABELS                 = 10;
+const int MAX_CNT_COMMANDS           = 128;
 
 enum assembler_status {
     ASM_SUCCESS                      = 0,
@@ -49,26 +48,10 @@ enum number_of_compile {
     SECOND_COMPILE = 2
 };
 
-enum type_arguments {
-    NO_ARGUMENT      = 0,
-    NUM_ARGUMENT     = 1,
-    REG_ARGUMENT     = 2,
-    LABEL_ARGUMENT   = 3,
-    RAM_REG_ARGUMENT = 4
-};
-
 
 struct Byte_code_data {
     type_t* data;
     size_t size;
-};
-
-struct About_commands {
-    const char* command_name;
-    unsigned long hash;
-    type_t command_code;
-    int code_of_type_argument;
-    type_t argument;
 };
 
 struct About_labels {
@@ -81,20 +64,30 @@ struct About_register {
     unsigned long hash;
 };
 
+struct Asm_about_commands {
+    const char* name;
+    type_t code;
+    int type_argument;
+    type_t argument;
+    unsigned long hash;
+};
+
 struct Assembler {
     Byte_code_data byte_code_data;
     About_text about_text;
     About_labels about_labels[CNT_LABELS];
     int cnt_current_label;
+    Asm_about_commands asm_about_commands[SIZE_ABOUT_COMMANDS];
 };
 
-unsigned long hash_djb2(const char *str);
+
+assembler_status AsmCtor(Assembler* assembler, const char* name_comands_file);
+
+void AsmInitAboutCommands(Assembler* assembler);
 
 void AsmInitLabels(Assembler* assembler);
 
 number_of_compile FirstOrSecondCompile(const Assembler* assembler);
-
-assembler_status AsmCtor(Assembler* assembler, const char* name_comands_file);
 
 assembler_status AsmVerify(const Assembler* assembler);
 
@@ -112,21 +105,21 @@ assembler_status Assemblirovanie(Assembler* assembler);
 
 void InsertLabel(Assembler* assembler, char* string);
 
-status_cmp FindCommand(Assembler* assembler, char* string, About_commands* current_command);
+status_cmp FindCommand(Assembler* assembler, char* string, Asm_about_commands* current_command);
 
-void FillCommand(Assembler* assembler, About_commands* current_command);
+void FillCommand(Assembler* assembler, Asm_about_commands* current_command);
 
-assembler_status PassArgs(Assembler* assembler, About_commands* current_command, char* string);
+assembler_status PassArgs(Assembler* assembler, Asm_about_commands* current_command, char* string);
 
-assembler_status GetFillArgNum(Assembler* assembler, About_commands* current_command, char* string);
+assembler_status GetFillArgNum(Assembler* assembler, Asm_about_commands* current_command, char* string);
 
-assembler_status GetFillArgReg(Assembler* assembler, About_commands* current_command, char* string, int type_argument);
+assembler_status GetFillArgReg(Assembler* assembler, Asm_about_commands* current_command, char* string, int type_argument);
 
 status_cmp CheckRegister(char* string, int type_argument);
 
-assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_command, char* string);
+assembler_status GetFillArgJump(Assembler* assembler, Asm_about_commands* current_command, char* string);
 
-void FillListingFile(char* pointer_on_command, About_commands* current_command, FILE* listing_file, int type_argument);
+void FillListingFile(char* pointer_on_command, Asm_about_commands* current_command, FILE* listing_file, int type_argument);
 
 assembler_status PrintfByteCode(Assembler* assembler);
 

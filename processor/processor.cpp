@@ -12,33 +12,6 @@
 #include "stack.h"
 #include "variable_information.h"
 
-void InitAboutCommands(About_commands* about_commands) {
-    assert(about_commands);
-
-    about_commands[CMD_PUSH]  = {.command_name = "PUSH",  &do_push};
-    about_commands[CMD_POP]   = {.command_name = "POP",   &do_pop};
-    about_commands[CMD_ADD]   = {.command_name = "ADD",   &do_add};
-    about_commands[CMD_SUB]   = {.command_name = "SUB",   &do_sub};
-    about_commands[CMD_DIV]   = {.command_name = "DIV",   &do_div};
-    about_commands[CMD_MUL]   = {.command_name = "MUL",   &do_mul};
-    about_commands[CMD_SQRT]  = {.command_name = "SQRT",  &do_sqrt};
-    about_commands[CMD_POW]   = {.command_name = "POW",   &do_pow};
-    about_commands[CMD_IN]    = {.command_name = "IN",    &do_in};
-    about_commands[CMD_OUT]   = {.command_name = "OUT",   &do_out};
-    about_commands[CMD_JMP]   = {.command_name = "JMP",   &do_jmp};
-    about_commands[CMD_JB]    = {.command_name = "JB",    &do_jb};
-    about_commands[CMD_JBE]   = {.command_name = "JBE",   &do_jbe};
-    about_commands[CMD_JA]    = {.command_name = "JA",    &do_ja};
-    about_commands[CMD_JAE]   = {.command_name = "JAE",   &do_jae};
-    about_commands[CMD_JE]    = {.command_name = "JE",    &do_je};
-    about_commands[CMD_JNE]   = {.command_name = "JNE",   &do_jne};
-    about_commands[CMD_CALL]  = {.command_name = "CALL",  &do_call};
-    about_commands[CMD_RET]   = {.command_name = "RET",   &do_ret};
-    about_commands[CMD_PUSHR] = {.command_name = "PUSHR", &do_pushr};
-    about_commands[CMD_POPR]  = {.command_name = "POPR",  &do_popr};
-    about_commands[CMD_PUSHM] = {.command_name = "PUSHM", &do_pushm};
-    about_commands[CMD_POPM]  = {.command_name = "POPM",  &do_popm};
-}
 
 processor_status ProcCtor(Processor* processor, const char* name_byte_code_file) {
     assert(processor);
@@ -51,6 +24,8 @@ processor_status ProcCtor(Processor* processor, const char* name_byte_code_file)
     CHECK_AND_RETURN_ERRORS_STACK(STACK_CREATE(processor->stack, DEFAULT_START_CAPACITY));
     CHECK_AND_RETURN_ERRORS_STACK(STACK_CREATE(processor->return_stack, DEFAULT_START_CAPACITY));
 
+    ProcInitAboutCommands(processor);
+
     memset(processor->registers, 0, CNT_REGISTERS * sizeof(processor->registers[0]));
     memset(processor->ram, 0, SIZE_RAM * sizeof(processor->ram[0]));
 
@@ -61,6 +36,15 @@ processor_status ProcCtor(Processor* processor, const char* name_byte_code_file)
     CHECK_AND_RETURN_ERRORS_PROC(ProcVerify(processor));
 
     return PROC_SUCCESS;
+}
+
+void ProcInitAboutCommands(Processor* processor) {
+    assert(processor);
+
+    for (size_t i = 0; i < SIZE_ABOUT_COMMANDS; ++i) {
+        processor->proc_about_commands[about_commands[i].code] = {.name = about_commands[i].name,
+                                                                  .function = about_commands[i].function};
+    }
 }
 
 processor_status ProcVerify(const Processor* processor) {
@@ -79,7 +63,7 @@ processor_status ProcVerify(const Processor* processor) {
     return PROC_SUCCESS;
 }
 
-processor_status SPU(Processor* processor, About_commands* about_commands) {
+processor_status SPU(Processor* processor) {
     CHECK_AND_RETURN_ERRORS_PROC(ProcVerify(processor));
 
     type_t command = 0;
@@ -93,7 +77,7 @@ processor_status SPU(Processor* processor, About_commands* about_commands) {
             break;
         }
 
-        about_commands[command].function(processor);
+        processor->proc_about_commands[command].function(processor);
 
         processor->programm_cnt++;
     }

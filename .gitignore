@@ -3,8 +3,12 @@ proc_prog
 .exe
 .vscode
 build/
-asm/commands.txt
 processor/byte_code.txt
 asm/commands_1.txt
 asm/commands_2.txt
 asm/commands_reg.txt
+asm/commands_jmp.txt
+asm/commands_j.txt
+asm/commands_func.txt
+asm/commands_ram.txt
+asm/listing_file.txt

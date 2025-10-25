@@ -9,33 +9,6 @@
 #include "../common.h"
 #include "onegin.h"
 
-// FIXME объединить с процессорным...как
-About_commands about_commands [] = {
-    {.command_name = "PUSH", .hash = hash_djb2((const char*)"PUSH"),  .command_code = CMD_PUSH,  .code_of_type_argument = NUM_ARGUMENT,     .argument = 0},
-    {.command_name = "POP",  .hash = hash_djb2((const char*)"POP"),   .command_code = CMD_POP,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "ADD",  .hash = hash_djb2((const char*)"ADD"),   .command_code = CMD_ADD,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "SUB",  .hash = hash_djb2((const char*)"SUB"),   .command_code = CMD_SUB,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "DIV",  .hash = hash_djb2((const char*)"DIV"),   .command_code = CMD_DIV,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "MUL",  .hash = hash_djb2((const char*)"MUL"),   .command_code = CMD_MUL,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "SQRT", .hash = hash_djb2((const char*)"SQRT"),  .command_code = CMD_SQRT,  .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "POW",  .hash = hash_djb2((const char*)"POW"),   .command_code = CMD_POW,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "IN",   .hash = hash_djb2((const char*)"IN"),    .command_code = CMD_IN,    .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "OUT",  .hash = hash_djb2((const char*)"OUT"),   .command_code = CMD_OUT,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "HLT",  .hash = hash_djb2((const char*)"HLT"),   .command_code = CMD_HLT,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "JMP",  .hash = hash_djb2((const char*)"JMP"),   .command_code = CMD_JMP,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JB",   .hash = hash_djb2((const char*)"JB"),    .command_code = CMD_JB,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JBE",  .hash = hash_djb2((const char*)"JBE"),   .command_code = CMD_JBE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JA",   .hash = hash_djb2((const char*)"JA"),    .command_code = CMD_JA,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JAE",  .hash = hash_djb2((const char*)"JAE"),   .command_code = CMD_JAE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JE",   .hash = hash_djb2((const char*)"JE"),    .command_code = CMD_JE,    .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "JNE",  .hash = hash_djb2((const char*)"JNE"),   .command_code = CMD_JNE,   .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "CALL", .hash = hash_djb2((const char*)"CALL"),  .command_code = CMD_CALL,  .code_of_type_argument = LABEL_ARGUMENT,   .argument = 0},
-    {.command_name = "RET",  .hash = hash_djb2((const char*)"RET"),   .command_code = CMD_RET,   .code_of_type_argument = NO_ARGUMENT,      .argument = 0},
-    {.command_name = "PUSHR",.hash = hash_djb2((const char*)"PUSHR"), .command_code = CMD_PUSHR, .code_of_type_argument = REG_ARGUMENT,     .argument = 0},
-    {.command_name = "POPR", .hash = hash_djb2((const char*)"POPR"),  .command_code = CMD_POPR,  .code_of_type_argument = REG_ARGUMENT,     .argument = 0},
-    {.command_name = "PUSHM",.hash = hash_djb2((const char*)"PUSHM"), .command_code = CMD_PUSHM, .code_of_type_argument = RAM_REG_ARGUMENT, .argument = 0},
-    {.command_name = "POPM", .hash = hash_djb2((const char*)"POPM"),  .command_code = CMD_POPM,  .code_of_type_argument = RAM_REG_ARGUMENT, .argument = 0}
-};
 
 About_register about_register [] {
     {.register_name = "RAX",   .hash = hash_djb2((const char*)"RAX")},
@@ -66,22 +39,37 @@ assembler_status AsmCtor(Assembler* assembler, const char* name_commands_file) {
 
     AsmInitLabels(assembler);
 
+    AsmInitAboutCommands(assembler);
+
     CHECK_AND_RETURN_ERRORS_ASM(OneginReadFile(assembler),      free(assembler->byte_code_data.data));
 
     CHECK_AND_RETURN_ERRORS_ASM(DivisionIntoCommands(assembler));
 
     CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
 
-    qsort(about_commands, sizeof(about_commands) / sizeof(about_commands[0]), sizeof(About_commands), &qsort_commands_comparator);
+    qsort(assembler->asm_about_commands, sizeof(assembler->asm_about_commands) / sizeof(assembler->asm_about_commands[0]), 
+          sizeof(Asm_about_commands), &qsort_commands_comparator);
     qsort(about_register, sizeof(about_register) / sizeof(about_register[0]), sizeof(About_register), &qsort_register_comparator);
 
     return ASM_SUCCESS;
 }
 
 void AsmInitLabels(Assembler* assembler) {
+    assert(assembler);
+
     for (int i = 0; i < CNT_LABELS; ++i) {
         assembler->about_labels[i].hash  =  0;
         assembler->about_labels[i].index = -1;
+    }
+}
+
+void AsmInitAboutCommands(Assembler* assembler) {
+    assert(assembler);
+
+    for (size_t i = 0; i < SIZE_ABOUT_COMMANDS; ++i) {
+        assembler->asm_about_commands[i] = {.name = about_commands[i].name, .code = about_commands[i].code,
+                                            .type_argument = about_commands[i].type_argument, .argument = about_commands[i].argument,
+                                            .hash = about_commands[i].hash};
     }
 }
 
@@ -134,7 +122,7 @@ int qsort_ ## name ## _comparator(const void* param1, const void* param2) {     
     return 0;                                                                    \
 }
 
-DO_QSORT_COMPARATOR(commands, About_commands)
+DO_QSORT_COMPARATOR(commands, Asm_about_commands)
 DO_QSORT_COMPARATOR(register, About_register)
 DO_QSORT_COMPARATOR(label,    About_labels)
 
@@ -153,7 +141,7 @@ int bsearch_ ## name ## _comparator(const void* param1, const void* param2) {  \
     return 0;                                                                  \
 }
 
-DO_BSEARCH_COMPARATOR(commands, About_commands)
+DO_BSEARCH_COMPARATOR(commands, Asm_about_commands)
 DO_BSEARCH_COMPARATOR(register, About_register)
 
 #undef DO_BSEARCH_COMPARATOR
@@ -188,21 +176,22 @@ assembler_status Assemblirovanie(Assembler* assembler) {
             continue;
         }
 
-        About_commands current_command = {};
+        Asm_about_commands current_command = {};
         if (!FindCommand(assembler, assembler->about_text.pointer_on_text[i], &current_command)) {
             CHECK_AND_RETURN_ERRORS_ASM(ASM_UNKNOWN_COMAND);
         }
 
         FillCommand(assembler, &current_command);
 
-        if (current_command.command_code == CMD_HLT) find_cmd_hlt = true;
+        if (current_command.code == CMD_HLT) 
+            find_cmd_hlt = true;
 
-        if (current_command.code_of_type_argument != NO_ARGUMENT) {
+        if (current_command.type_argument != NO_ARGUMENT)
             CHECK_AND_RETURN_ERRORS_ASM(PassArgs(assembler, &current_command, assembler->about_text.pointer_on_text[++i]));
-        }
+        
 
         if (FirstOrSecondCompile(assembler) == SECOND_COMPILE) {
-            FillListingFile(assembler->about_text.pointer_on_text[i], &current_command, listing_file, current_command.code_of_type_argument);
+            FillListingFile(assembler->about_text.pointer_on_text[i], &current_command, listing_file, current_command.type_argument);
         }
 
         CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
@@ -240,53 +229,54 @@ void InsertLabel(Assembler* assembler, char* string) {
     assembler->cnt_current_label++;
 }
 
-status_cmp FindCommand(Assembler* assembler, char* string, About_commands* current_command) {
+status_cmp FindCommand(Assembler* assembler, char* string, Asm_about_commands* current_command) {
     assert(assembler);
     assert(string);
     assert(current_command);
 
     unsigned long current_hash = hash_djb2((char*)string);
 
-    About_commands* res = (About_commands*)bsearch(&current_hash, about_commands, sizeof(about_commands) / sizeof(about_commands[0]), 
-                                                   sizeof(About_commands), &bsearch_commands_comparator);
+    Asm_about_commands* res = (Asm_about_commands*)bsearch(&current_hash, assembler->asm_about_commands, 
+                                                           sizeof(assembler->asm_about_commands) / sizeof(assembler->asm_about_commands[0]), 
+                                                           sizeof(Asm_about_commands), &bsearch_commands_comparator);
 
     if (res == NULL) 
         return DIFFERENT;
 
-    long int index = res - about_commands;
+    long int index = res - assembler->asm_about_commands;
 
-    if (strcmp(about_commands[index].command_name, string) == 0) {
-        *current_command = about_commands[index];
+    if (strcmp(assembler->asm_about_commands[index].name, string) == 0) {
+        *current_command = assembler->asm_about_commands[index];
         return EQUAL;
     }
 
     return DIFFERENT;
 }
 
-void FillCommand(Assembler* assembler, About_commands* current_command) {
+void FillCommand(Assembler* assembler, Asm_about_commands* current_command) {
     assert(assembler);
     assert(current_command);
 
     if (assembler->byte_code_data.data != NULL) {
-        assembler->byte_code_data.data[assembler->byte_code_data.size] = current_command->command_code;
+        assembler->byte_code_data.data[assembler->byte_code_data.size] = current_command->code;
     }
 
     assembler->byte_code_data.size++;
 }
 
-assembler_status PassArgs(Assembler* assembler, About_commands* current_command, char* string) {
-    if (current_command->code_of_type_argument == NUM_ARGUMENT) {
+assembler_status PassArgs(Assembler* assembler, Asm_about_commands* current_command, char* string) {
+    if (current_command->type_argument == NUM_ARGUMENT) {
         if (GetFillArgNum(assembler, current_command, string) == ASM_SUCCESS)
             return ASM_SUCCESS;
     }
 
-    if (current_command->code_of_type_argument == REG_ARGUMENT ||
-        current_command->code_of_type_argument == RAM_REG_ARGUMENT) {
-        if (GetFillArgReg(assembler, current_command, string, current_command->code_of_type_argument) == ASM_SUCCESS)
+    if (current_command->type_argument == REG_ARGUMENT ||
+        current_command->type_argument == RAM_REG_ARGUMENT) {
+        if (GetFillArgReg(assembler, current_command, string, current_command->type_argument) == ASM_SUCCESS)
             return ASM_SUCCESS;
     }
 
-    if (current_command->code_of_type_argument == LABEL_ARGUMENT) {
+    if (current_command->type_argument == LABEL_ARGUMENT) {
         if (GetFillArgJump(assembler, current_command, string) == ASM_SUCCESS)
             return ASM_SUCCESS;
     }
@@ -294,7 +284,7 @@ assembler_status PassArgs(Assembler* assembler, About_commands* current_command,
     return ASM_EXPECTS_ARG;
 }
 
-assembler_status GetFillArgNum(Assembler* assembler, About_commands* current_command, char* string) {
+assembler_status GetFillArgNum(Assembler* assembler, Asm_about_commands* current_command, char* string) {
     assert(string);
 
     CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
@@ -318,7 +308,7 @@ assembler_status GetFillArgNum(Assembler* assembler, About_commands* current_com
     return ASM_SUCCESS;
 }
 
-assembler_status GetFillArgReg(Assembler* assembler, About_commands* current_command, char* string, int type_argument) {
+assembler_status GetFillArgReg(Assembler* assembler, Asm_about_commands* current_command, char* string, int type_argument) {
     assert(string);
 
     CHECK_AND_RETURN_ERRORS_ASM(AsmVerify(assembler));
@@ -369,7 +359,7 @@ status_cmp CheckRegister(char* string, int type_argument) {
     return DIFFERENT;
 }
 
-assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_command, char* string) {
+assembler_status GetFillArgJump(Assembler* assembler, Asm_about_commands* current_command, char* string) {
     assert(string);
 
     if (GetFillArgNum(assembler, current_command, string) == ASM_SUCCESS) {
@@ -409,14 +399,14 @@ assembler_status GetFillArgJump(Assembler* assembler, About_commands* current_co
     return ASM_EXPECTS_JUMP_ARG;
 }
 
-void FillListingFile(char* pointer_on_command, About_commands* current_command, FILE* listing_file, int type_argument) {
+void FillListingFile(char* pointer_on_command, Asm_about_commands* current_command, FILE* listing_file, int type_argument) {
     assert(pointer_on_command);
     assert(current_command);
     assert(listing_file);
 
     fprintf(listing_file, "%p ", pointer_on_command);
-    fprintf(listing_file, "%-8s ", current_command->command_name);
-    fprintf(listing_file, "%-5ld ", current_command->command_code);
+    fprintf(listing_file, "%-8s ", current_command->name);
+    fprintf(listing_file, "%-5ld ", current_command->code);
 
     if (type_argument != NO_ARGUMENT) {
         fprintf(listing_file, TYPE_T_PRINTF_SPECIFIER, current_command->argument);
